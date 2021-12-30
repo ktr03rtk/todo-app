@@ -3,8 +3,9 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFirstHandler(t *testing.T) {
@@ -17,12 +18,7 @@ func TestFirstHandler(t *testing.T) {
 		t.Errorf("got HTTP status code %d, expected 200", w.Code)
 	}
 
-	if !strings.Contains(w.Body.String(), "first") {
-		t.Errorf(
-			`response body "%s" does not contain "first"`,
-			w.Body.String(),
-		)
-	}
+	assert.Contains(t, w.Body.String(), "first", "response body %s does not contain 'first'", w.Body.String())
 }
 
 func TestSecondHandler(t *testing.T) {
@@ -35,10 +31,5 @@ func TestSecondHandler(t *testing.T) {
 		t.Errorf("got HTTP status code %d, expected 200", w.Code)
 	}
 
-	if !strings.Contains(w.Body.String(), "second") {
-		t.Errorf(
-			`response body "%s" does not contain "second"`,
-			w.Body.String(),
-		)
-	}
+	assert.Contains(t, w.Body.String(), "second", "response body %s does not contain 'second'", w.Body.String())
 }
