@@ -1,4 +1,4 @@
-name: cicd-github-actions
+name: cicd test and build
 on: [push]
 jobs:
   test:
