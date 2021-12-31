@@ -41,6 +41,8 @@ fmt:
 	gofmt -s -w .
 
 fmtcheck:
-	@sh -c "find . -name '*.go' | grep -v vendor | xargs gofmt -l -s"
+	$(eval LIST := "$(find . -name '*.go' | grep -v vendor | xargs gofmt -l -s)")
+	# @sh -c "find . -name '*.go' | grep -v vendor | xargs gofmt -l -s"
+	echo "$(LIST)"
 
 .PHONY: default build run test_up test_down test hottest ci_test fmt fmtcheck
