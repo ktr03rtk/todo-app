@@ -41,8 +41,11 @@ fmt:
 	gofmt -s -w .
 
 fmtcheck:
-	$(eval LIST := "$(find . -name '*.go' | grep -v vendor | xargs gofmt -l -s)")
-	# @sh -c "find . -name '*.go' | grep -v vendor | xargs gofmt -l -s"
-	echo "$(LIST)"
+	@$(eval LIST := $(shell find . -name '*.go' | grep -v vendor | xargs gofmt -l -s))
+ifndef "$(LIST)"
+	@echo 'gofmt needs running on the following files:'
+	@echo "$(LIST)"
+	@exit 1
+endif
 
 .PHONY: default build run test_up test_down test hottest ci_test fmt fmtcheck
