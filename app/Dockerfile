@@ -7,7 +7,7 @@ RUN go mod download \
   && go get -u github.com/cespare/reflex
 
 COPY ./ ./
-RUN go build
+RUN go build -o server
 
 FROM golang as debug-stage
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
