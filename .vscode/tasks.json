@@ -12,7 +12,7 @@
         "debug-stage",
         "-t",
         "server:debug",
-        "${fileWorkspaceFolder}"
+        "${fileWorkspaceFolder}/app"
       ],
       "group": {
         "kind": "build",
