@@ -6,7 +6,7 @@ import (
 )
 
 func firstHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "fist")
+	fmt.Fprintf(w, "first")
 }
 
 func secondHandler(w http.ResponseWriter, r *http.Request) {
