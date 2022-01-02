@@ -1,6 +1,10 @@
 name: cicd test and build
 
-on: [push]
+on:
+  push:
+  pull_request:
+    branches:
+      - development
 
 env:
   SLACK_CHANNEL: github-notification
