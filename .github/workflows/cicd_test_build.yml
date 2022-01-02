@@ -11,6 +11,11 @@ on:
 
 env:
   SLACK_CHANNEL: github-notification
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+  AWS_ROLE_ARN: ${{ secrets.ECR_REGISTRY }}
+  AWS_ROLE_ARN: ${{ secrets.ECR_REGISTRY }}
+  AWS_ROLE_ARN: ${{ secrets.ECR_REPOSITORY
+  AWS_ROLE_ARN: ${{ secrets.SLACK_WEBHOOK_U
 
 permissions:
   id-token: write
@@ -49,12 +54,12 @@ jobs:
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: $AWS_ROLE_ARN
           aws-region: ap-northeast-1
 
       - uses: docker/login-action@v1
         with:
-          registry: ${{ secrets.ECR_REGISTRY }}
+          registry: $ECR_REGISTRY
 
       - name: Build test image
         uses: docker/build-push-action@v2
@@ -75,7 +80,7 @@ jobs:
         with:
           context: ./app
           push: true
-          tags: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          tags: $secrets.ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
 
       - name: Move cache
         run: |
@@ -85,7 +90,7 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: $SLACK_WEBHOOK_URL
           SLACK_TITLE: GitHub Actions Result
           SLACK_COLOR: ${{ job.status }}
 
