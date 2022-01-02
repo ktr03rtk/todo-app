@@ -41,9 +41,6 @@ else
 	reflex -r '\.go$$' -- gotest -run $(TESTFUNC) $(TEST) $(TESTARGS)
 endif
 
-ci_test:
-	docker run --rm --name server -e ENVIRONMENT=development server:build sh -c "gotest ./... -v"
-
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w .

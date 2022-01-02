@@ -42,7 +42,7 @@ jobs:
         run: |
           cd app
           make build
-          make ci_test
+          make test
 
       - uses: docker/build-push-action@v2
         with:
