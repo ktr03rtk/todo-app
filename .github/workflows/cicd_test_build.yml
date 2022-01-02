@@ -32,17 +32,16 @@ jobs:
         with:
           registry: ${{ secrets.ECR_REGISTRY }}
 
-      - name: set up buildx for test
+      - name: build test image
         uses: docker/build-push-action@v2
         with:
           context: ./app
           load: true
-
-      - name: test
+          target: build-stage
+          tags: server:build
+      - name: Test
         run: |
-          cd app
-          make build
-          make test
+          docker run --rm server:build sh -c "gotest ./... -v"
 
       - uses: docker/build-push-action@v2
         with:

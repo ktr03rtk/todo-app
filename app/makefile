@@ -8,24 +8,16 @@ IMAGE=iotlogtransformfunction
 default: build
 
 build: fmtcheck
-ifndef GITHUB_ACTION
-	docker build --target build-stage -t server:build .
-else
-	docker buildx build --target build-stage -t server:build .
-endif
+docker build --target build-stage -t server:build .
 
 run: build
 	docker run --rm -p 8080:8080 server:build /opt/server
 
 test: fmtcheck
-ifndef GITHUB_ACTION
 	gotest $(TEST) $(TESTARGS) -timeout=5m -parallel=8 -coverprofile=cover.out.tmp
 	@cat cover.out.tmp | grep -v "mock_" > cover.out
 	@go tool cover -html=cover.out -o cover.html
 	@rm -f cover.out cover.out.tmp
-else
-	docker run --rm --name server -e ENVIRONMENT=development server:build sh -c "gotest ./... -v"
-endif
 
 test_up: test_down
 	docker run -ti --rm -p 8080:8080 -v $(PWD)/:/opt/ \
