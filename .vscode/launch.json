@@ -1,0 +1,19 @@
+{
+  "version": " 0.2.0",
+  "configurations": [
+    {
+      "name": "Debug goserver",
+      "type": "go",
+      "request": "attach",
+      "preLaunchTask": "docker run go",
+      "postDebugTask": "docker stop",
+      "console": "internalConsole",
+      "mode": "remote",
+      "apiVersion": 2,
+      "trace": "verbose",
+      "sourceFileMap": [{ "./app": "/opt" }],
+      "port": 2345,
+      "host": "127.0.0.1"
+    }
+  ]
+}

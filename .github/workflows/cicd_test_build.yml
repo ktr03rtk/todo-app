@@ -1,0 +1,87 @@
+name: cicd test and build
+
+on:
+  push:
+  pull_request:
+    branches:
+      - development
+
+env:
+  SLACK_CHANNEL: github-notification
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  static_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: go fmt check
+        run: cd app && make fmtcheck
+
+  build:
+    runs-on: ubuntu-latest
+    needs: static_check
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up docker
+        uses: docker/setup-buildx-action@v1
+
+      - uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.ECR_REGISTRY }}
+
+      - name: Build test image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./app
+          load: true
+          target: build-stage
+          tags: server:build
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Test
+        run: |
+          docker run --rm server:build sh -c "gotest ./... -v"
+
+      - name: Build image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./app
+          push: true
+          tags: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: GitHub Actions Result
+          SLACK_COLOR: ${{ job.status }}
