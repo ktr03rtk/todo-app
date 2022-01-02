@@ -53,6 +53,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./app
+          load: true
           target: build-stage
           tags: server:build
           cache-from: type=local,src=/tmp/.buildx-cache
