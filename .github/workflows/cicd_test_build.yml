@@ -7,6 +7,19 @@ permissions:
   contents: read
 
 jobs:
+  static_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: go fmt check
+        run: cd app && make fmtcheck
+
   build:
     runs-on: ubuntu-latest
     steps:
