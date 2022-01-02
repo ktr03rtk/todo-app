@@ -62,7 +62,7 @@ jobs:
         run: |
           docker run --rm server:build sh -c "gotest ./... -v"
 
-      -  name: Build image
+      - name: Build image
         uses: docker/build-push-action@v2
         with:
           context: ./app
