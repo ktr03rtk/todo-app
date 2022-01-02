@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: docker set up
+      - name: Set up docker
         uses: docker/setup-buildx-action@v1
 
       - uses: actions/cache@v2
@@ -39,7 +39,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: set up erc
+      - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -49,7 +49,7 @@ jobs:
         with:
           registry: ${{ secrets.ECR_REGISTRY }}
 
-      - name: build test image
+      - name: Build test image
         uses: docker/build-push-action@v2
         with:
           context: ./app
@@ -62,13 +62,12 @@ jobs:
         run: |
           docker run --rm server:build sh -c "gotest ./... -v"
 
-      - uses: docker/build-push-action@v2
+      -  name: Build image
+        uses: docker/build-push-action@v2
         with:
           context: ./app
           push: true
           tags: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-          # cache-from: type=local,src=/tmp/.buildx-cache
-          # cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Move cache
         run: |
