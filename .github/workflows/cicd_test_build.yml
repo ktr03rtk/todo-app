@@ -40,6 +40,7 @@ jobs:
 
       - name: test
         run: |
+          cd app
           make build
           make ci_test
 
