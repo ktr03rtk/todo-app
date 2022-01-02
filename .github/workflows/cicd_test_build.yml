@@ -12,9 +12,9 @@ on:
 env:
   SLACK_CHANNEL: github-notification
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-  AWS_ROLE_ARN: ${{ secrets.ECR_REGISTRY }}
-  AWS_ROLE_ARN: ${{ secrets.ECR_REPOSITORY }}
-  AWS_ROLE_ARN: ${{ secrets.SLACK_WEBHOOK_URL }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 permissions:
   id-token: write
