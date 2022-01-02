@@ -52,7 +52,7 @@ jobs:
           load: true
 
       - name: test
-        run |
+        run: |
           make build
           make ci_test
 
@@ -68,7 +68,6 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
 
   # build:
   #   runs-on: ubuntu-latest
