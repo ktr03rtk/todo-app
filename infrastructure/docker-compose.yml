@@ -1,0 +1,12 @@
+version: "3.10"
+services:
+  terraform:
+    container_name: "terraform"
+    build:
+      context: .
+      args:
+        AWSCLI_VERSION: "2.4.7"
+        TERRAFORM_VERSION: "1.1.2"
+        TFLINT_VERSION: "v0.24.1"
+    working_dir: /environments
+    tty: true
