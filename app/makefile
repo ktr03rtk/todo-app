@@ -8,7 +8,7 @@ IMAGE=iotlogtransformfunction
 default: build
 
 build: fmtcheck
-docker build --target build-stage -t server:build .
+	docker build --target build-stage -t server:build .
 
 run: build
 	docker run --rm -p 8080:8080 server:build /opt/server

@@ -17,7 +17,7 @@ RUN go build -gcflags "all=-N -l" -o debug_app
 EXPOSE 8080 2345
 ENTRYPOINT ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./debug_app"]
 
-FROM golang
+FROM alpine
 COPY --from=build-stage /opt/server /usr/bin/server
 EXPOSE 8080
 ENTRYPOINT ["server"]
