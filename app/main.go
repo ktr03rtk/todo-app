@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hello world")
+}
+
 func firstHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "first")
 }
@@ -18,6 +22,7 @@ func main() {
 		Addr: "0.0.0.0:8080",
 	}
 
+	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
 	http.HandleFunc("/second", secondHandler)
 
