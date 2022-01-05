@@ -1,4 +1,4 @@
-FROM golang as build-stage
+FROM golang:1.17-alpine as build-stage
 
 WORKDIR /opt
 COPY go.mod go.sum ./
