@@ -18,7 +18,7 @@ run: build
 	docker run --rm -p 8080:8080 server:latest /opt/server
 
 test:
-	gotest $(TEST) $(TESTARGS) -timeout=5m -parallel=8 -coverprofile=cover.out.tmp
+	gotest $(TEST) $(TESTARGS) -coverprofile=cover.out.tmp
 	@cat cover.out.tmp | grep -v "mock_" > cover.out
 	@go tool cover -html=cover.out -o cover.html
 	@rm -f cover.out cover.out.tmp
@@ -32,7 +32,7 @@ test_down:
 
 hottest:
 ifndef FUNC
-	reflex -r '\.go$$' -- gotest $(TEST) $(TESTARGS) -parallel=8
+	reflex -r '\.go$$' -- gotest $(TEST) $(TESTARGS)
 else
 	reflex -r '\.go$$' -- gotest -run $(TESTFUNC) $(TEST) $(TESTARGS)
 endif

@@ -33,6 +33,7 @@ jobs:
 
       - name: go fmt check
         run: cd app && make fmtcheck
+        run: gotest -v ./...
 
   build:
     runs-on: ubuntu-latest
@@ -71,8 +72,9 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Test
-        run: |
-          docker run --rm build-server:${{ github.sha }} sh -c "gotest ./... -v"
+        # "go test" includes "go vet"", which need C libraries. Alpine container exec this step.
+        run: docker run --rm build-server:${{ github.sha }} sh -c "gotest -v -vet=off ./..."
+
 
       - name: Build image
         uses: docker/build-push-action@v2
