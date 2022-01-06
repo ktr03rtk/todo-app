@@ -35,7 +35,7 @@ jobs:
         run: |
           cd app
           make fmtcheck
-          gotest -v ./...
+          go test -v ./...
 
   build:
     runs-on: ubuntu-latest
