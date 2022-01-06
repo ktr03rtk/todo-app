@@ -66,13 +66,13 @@ jobs:
           context: ./app
           load: true
           target: build-stage
-          tags: server:build
+          tags: build-server:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Test
         run: |
-          docker run --rm server:build sh -c "gotest ./... -v"
+          docker run --rm build-server:${{ github.sha }} sh -c "gotest ./... -v"
 
       - name: Build image
         uses: docker/build-push-action@v2

@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /bin/sh
 TEST?=./...
 TESTARGS=-test.v
 TEST_FUNC=
@@ -8,12 +8,16 @@ IMAGE=iotlogtransformfunction
 default: build
 
 build: fmtcheck
-	docker build --target build-stage -t server:build .
+	docker build  -t server .
+	docker build --target build-stage -t build-server .
+
+dev-run: build
+	docker run --rm -p 8080:8080 build-server:latest /opt/server
 
 run: build
-	docker run --rm -p 8080:8080 server:build /opt/server
+	docker run --rm -p 8080:8080 server:latest /opt/server
 
-test: fmtcheck
+test:
 	gotest $(TEST) $(TESTARGS) -timeout=5m -parallel=8 -coverprofile=cover.out.tmp
 	@cat cover.out.tmp | grep -v "mock_" > cover.out
 	@go tool cover -html=cover.out -o cover.html
@@ -21,10 +25,10 @@ test: fmtcheck
 
 test_up: test_down
 	docker run -ti --rm -p 8080:8080 -v $(PWD)/:/opt/ \
-		--name server -e ENVIRONMENT=development server:build bash
+		--name build-server -e ENVIRONMENT=development build-server:latest sh
 
 test_down:
-	docker rm -f server
+	docker rm -f build-server
 
 hottest:
 ifndef FUNC
@@ -40,4 +44,4 @@ fmt:
 fmtcheck:
 	sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-.PHONY: default build run test_up test_down test hottest ci_test fmt fmtcheck
+.PHONY: default build dev-run run test_up test_down test hottest fmt fmtcheck
