@@ -32,8 +32,10 @@ jobs:
           go-version: 1.17
 
       - name: go fmt check
-        run: cd app && make fmtcheck
-        run: gotest -v ./...
+        run: \
+          cd app
+          make fmtcheck
+          gotest -v ./...
 
   build:
     runs-on: ubuntu-latest
@@ -74,7 +76,6 @@ jobs:
       - name: Test
         # "go test" includes "go vet"", which need C libraries. Alpine container exec this step.
         run: docker run --rm build-server:${{ github.sha }} sh -c "gotest -v -vet=off ./..."
-
 
       - name: Build image
         uses: docker/build-push-action@v2
