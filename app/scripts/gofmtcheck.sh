@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Check gofmt
 echo "==> Checking that code complies with gofmt requirements..."
