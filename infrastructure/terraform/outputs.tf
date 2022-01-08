@@ -1,3 +1,3 @@
-output "instance_arn" {
-  value = aws_instance.test.arn
-}
+# output "instance_arn" {
+#   value = aws_instance.test.arn
+# }
