@@ -70,9 +70,9 @@ resource "aws_security_group" "ingress" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description      = "HTTP access"
-    from_port        = 80
-    to_port          = 80
+    description      = "HTTPS access"
+    from_port        = 443
+    to_port          = 443
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
@@ -276,6 +276,7 @@ locals {
     "green" : 10080
   }
 }
+
 resource "aws_lb_target_group" "application" {
   for_each = local.target_group_map
   name     = "${var.app_name}-alb-tg-${each.key}"
@@ -322,14 +323,64 @@ resource "aws_lb" "application" {
   }
 }
 
+locals {
+  public_port_map = {
+    "blue" : 443,
+    "green" : 10443
+  }
+}
+
 resource "aws_lb_listener" "application" {
   for_each          = aws_lb_target_group.application
   load_balancer_arn = aws_lb.application.arn
-  port              = each.value.port
-  protocol          = "HTTP"
+  port              = local.public_port_map[each.key]
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.local_certificate_arn
 
   default_action {
+
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      status_code  = "403"
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "application" {
+  for_each     = aws_lb_target_group.application
+  listener_arn = aws_lb_listener.application[each.key].arn
+  priority     = 100
+
+  action {
     type             = "forward"
     target_group_arn = each.value.arn
+  }
+
+  condition {
+    host_header {
+      values = [aws_route53_record.alb.name]
+    }
+  }
+}
+
+# =========================================
+# Route53
+# =========================================
+data "aws_route53_zone" "host" {
+  name = var.host_zone_name
+}
+
+resource "aws_route53_record" "alb" {
+  zone_id = data.aws_route53_zone.host.zone_id
+  name    = "alb.${var.sub_domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.application.dns_name
+    zone_id                = aws_lb.application.zone_id
+    evaluate_target_health = true
   }
 }
