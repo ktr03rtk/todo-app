@@ -28,9 +28,16 @@ provider "aws" {
 }
 
 
+locals {
+  vpc_cidr           = "10.0.0.0/16"
+  availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
+  ingress_cidrs      = ["10.0.0.0/24", "10.0.1.0/24"]
+  private_cidrs      = ["10.0.10.0/24", "10.0.11.0/24"]
+  egress_cidrs       = ["10.0.20.0/24", "10.0.21.0/24"]
+}
 
 # =========================================
-# vpc
+# VPC
 # =========================================
 resource "aws_vpc" "main" {
   cidr_block = local.vpc_cidr
@@ -44,7 +51,7 @@ resource "aws_vpc" "main" {
 }
 
 # =========================================
-# igw
+# Internet Gateway
 # =========================================
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
@@ -55,7 +62,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # =========================================
-# sg
+# Security Group
 # =========================================
 resource "aws_security_group" "ingress" {
   name        = "${var.app_name}-sg-ingress"
@@ -136,16 +143,8 @@ resource "aws_security_group" "egress" {
 }
 
 # =========================================
-# subnet
+# Subnet
 # =========================================
-locals {
-  vpc_cidr           = "10.0.0.0/16"
-  availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
-  ingress_cidrs      = ["10.0.0.0/24", "10.0.1.0/24"]
-  private_cidrs      = ["10.0.10.0/24", "10.0.11.0/24"]
-  egress_cidrs       = ["10.0.20.0/24", "10.0.21.0/24"]
-}
-
 resource "aws_subnet" "ingress" {
   for_each = { for idx, az in local.availability_zones : idx => az }
 
@@ -186,7 +185,7 @@ resource "aws_subnet" "egress" {
 }
 
 # =========================================
-# route table
+# Route Table
 # =========================================
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -210,12 +209,6 @@ resource "aws_route_table_association" "ingress" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
-  # route {
-  #   cidr_block = local.vpc_cidr
-  #   gateway_id = aws_internet_gateway.igw.id
-  #   vpc_endpoint_id
-  # }
-
   tags = {
     Name = "${var.app_name}-rt-private"
   }
@@ -234,7 +227,7 @@ resource "aws_route_table_association" "egress" {
 }
 
 # =========================================
-# vpc endpoint
+# VPC Endpoint
 # =========================================
 locals {
   interface_endpoint_map = {
