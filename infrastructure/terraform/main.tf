@@ -364,6 +364,13 @@ resource "aws_lb_listener_rule" "application" {
       values = [aws_route53_record.alb.name]
     }
   }
+
+  condition {
+    http_header {
+      http_header_name = var.alb_access_header_name
+      values           = [var.alb_access_header_value]
+    }
+  }
 }
 
 # =========================================
@@ -382,5 +389,84 @@ resource "aws_route53_record" "alb" {
     name                   = aws_lb.application.dns_name
     zone_id                = aws_lb.application.zone_id
     evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "cloud_front" {
+  zone_id = data.aws_route53_zone.host.zone_id
+  name    = var.sub_domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.application.domain_name
+    zone_id                = aws_cloudfront_distribution.application.hosted_zone_id
+    evaluate_target_health = true
+  }
+}
+
+# =========================================
+# CloudFront
+# =========================================
+data "aws_cloudfront_cache_policy" "managed_caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+resource "aws_cloudfront_distribution" "application" {
+  aliases         = [var.sub_domain_name]
+  enabled         = true
+  is_ipv6_enabled = true
+
+
+  origin {
+    connection_attempts = 3
+    connection_timeout  = 10
+    domain_name         = aws_route53_record.alb.name
+    origin_id           = aws_lb.application.dns_name
+
+    custom_header {
+      name  = var.alb_access_header_name
+      value = var.alb_access_header_value
+    }
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_keepalive_timeout = 5
+      origin_protocol_policy   = "https-only"
+      origin_read_timeout      = 30
+      origin_ssl_protocols = [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2",
+      ]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = aws_lb.application.dns_name
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.managed_caching_disabled.id
+    compress               = true
+    smooth_streaming       = false
+    default_ttl            = 0
+    min_ttl                = 0
+    max_ttl                = 0
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = var.global_certificate_arn
+    ssl_support_method  = "sni-only"
+  }
+
+  tags = {
+    Name = "${var.app_name}-cloudfront"
   }
 }
