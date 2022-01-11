@@ -470,3 +470,116 @@ resource "aws_cloudfront_distribution" "application" {
     Name = "${var.app_name}-cloudfront"
   }
 }
+
+# =========================================
+# ECS
+# =========================================
+locals {
+  cluster_name = "${var.app_name}-ecs-cluster"
+}
+
+resource "aws_ecs_cluster" "application" {
+  name = local.cluster_name
+
+  configuration {
+    execute_command_configuration {
+      logging = "OVERRIDE"
+
+      log_configuration {
+        cloud_watch_encryption_enabled = true
+        cloud_watch_log_group_name     = aws_cloudwatch_log_group.ecs-cluster.name
+      }
+    }
+  }
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
+  tags = {
+    Name = "${var.app_name}-ecs-cluster"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ecs-cluster" {
+  name              = "/aws/ecs/containerinsights/${local.cluster_name}/performance"
+  retention_in_days = 30
+
+  tags = {
+    Name = "${var.app_name}-lg-ecs"
+  }
+}
+
+resource "aws_ecs_task_definition" "application" {
+  family                   = "${var.app_name}task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+
+  # task_role_arn      = ""
+  execution_role_arn = aws_iam_role.task_execution.arn
+
+  container_definitions = format("[%s]", templatefile(
+    "${path.module}/container_definitions.json",
+    {
+      app_name  = var.app_name
+      region    = var.region
+      image_arn = var.image_arn
+    }
+  ))
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = null
+  }
+
+  tags = {
+    Name = "${var.app_name}-task-def-ecs"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ecs-task" {
+  name              = "/ecs/${var.app_name}task"
+  retention_in_days = 30
+
+  tags = {
+    Name = "${var.app_name}-lg-ecs"
+  }
+}
+
+
+
+
+
+
+
+
+
+# =========================================
+# IAM
+# =========================================
+data "aws_iam_policy" "task_execution" {
+  name = "AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "task_execution" {
+  name = "${var.app_name}_task_execution_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  managed_policy_arns = [data.aws_iam_policy.task_execution.arn]
+}

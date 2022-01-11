@@ -1,0 +1,23 @@
+{
+  "logConfiguration": {
+    "logDriver": "awslogs",
+    "secretOptions": null,
+    "options": {
+      "awslogs-group": "/ecs/${app_name}task",
+      "awslogs-region": "${region}",
+      "awslogs-stream-prefix": "ecs"
+    }
+  },
+  "portMappings": [
+    {
+      "hostPort": 8080,
+      "protocol": "tcp",
+      "containerPort": 8080
+    }
+  ],
+  "cpu": 128,
+  "memoryReservation": 256,
+  "image": "${image_arn}",
+  "readonlyRootFilesystem": true,
+  "name": "${app_name}"
+}
