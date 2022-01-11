@@ -6,3 +6,4 @@ variable "host_zone_name" {}
 variable "sub_domain_name" {}
 variable "alb_access_header_name" {}
 variable "alb_access_header_value" {}
+variable "image_arn" {}
