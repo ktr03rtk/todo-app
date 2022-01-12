@@ -511,6 +511,9 @@ resource "aws_cloudwatch_log_group" "ecs-cluster" {
   }
 }
 
+locals {
+  container_name = var.app_name
+}
 resource "aws_ecs_task_definition" "application" {
   family                   = "${var.app_name}task"
   requires_compatibilities = ["FARGATE"]
@@ -524,9 +527,9 @@ resource "aws_ecs_task_definition" "application" {
   container_definitions = format("[%s]", templatefile(
     "${path.module}/container_definitions.json",
     {
-      app_name  = var.app_name
-      region    = var.region
-      image_arn = var.image_arn
+      container_name = local.container_name
+      region         = var.region
+      image_arn      = var.image_arn
     }
   ))
 
@@ -549,13 +552,107 @@ resource "aws_cloudwatch_log_group" "ecs-task" {
   }
 }
 
+resource "aws_ecs_service" "application" {
+  name                              = "${var.app_name}-ecs-service"
+  cluster                           = aws_ecs_cluster.application.id
+  task_definition                   = aws_ecs_task_definition.application.arn
+  launch_type                       = "FARGATE"
+  scheduling_strategy               = "REPLICA"
+  desired_count                     = 2
+  health_check_grace_period_seconds = 60
 
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
 
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
 
+  enable_ecs_managed_tags = true
 
+  # TODO: use dynamic block
+  load_balancer {
+    target_group_arn = aws_lb_target_group.application["blue"].arn
+    container_name   = local.container_name
+    container_port   = 8080
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.application["green"].arn
+    container_name   = local.container_name
+    container_port   = 8080
+  }
 
+  network_configuration {
+    subnets          = [for subnet in aws_subnet.private : subnet.id]
+    security_groups  = [aws_security_group.private.id]
+    assign_public_ip = false
+  }
 
+  tags = {
+    Name = "${var.app_name}-ecs-service"
+  }
+}
 
+# =========================================
+# Code Deploy
+# =========================================
+resource "aws_codedeploy_app" "application" {
+  compute_platform = "ECS"
+  name             = "${var.app_name}-deploy-app"
+}
+
+resource "aws_codedeploy_deployment_group" "application" {
+  app_name               = aws_codedeploy_app.application.name
+  deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
+  deployment_group_name  = "${var.app_name}-deployment"
+  service_role_arn       = aws_iam_role.ecs_code_deploy_role.arn
+
+  auto_rollback_configuration {
+    enabled = true
+    events  = ["DEPLOYMENT_FAILURE"]
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout = "CONTINUE_DEPLOYMENT"
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action                           = "TERMINATE"
+      termination_wait_time_in_minutes = 5
+    }
+  }
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
+  }
+
+  ecs_service {
+    cluster_name = aws_ecs_cluster.application.name
+    service_name = aws_ecs_service.application.name
+  }
+
+  load_balancer_info {
+    target_group_pair_info {
+      prod_traffic_route {
+        listener_arns = [aws_lb_listener.application["blue"].arn]
+      }
+
+      target_group {
+        name = aws_lb_target_group.application["blue"].name
+      }
+
+      target_group {
+        name = aws_lb_target_group.application["green"].name
+      }
+    }
+  }
+
+  tags = {
+    Name = "${var.app_name}-deployment"
+  }
+}
 
 # =========================================
 # IAM
@@ -573,7 +670,6 @@ resource "aws_iam_role" "task_execution" {
       {
         Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid    = ""
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
         }
@@ -582,4 +678,27 @@ resource "aws_iam_role" "task_execution" {
   })
 
   managed_policy_arns = [data.aws_iam_policy.task_execution.arn]
+}
+
+data "aws_iam_policy" "ecs_code_deploy_policy" {
+  name = "AWSCodeDeployRoleForECS"
+}
+
+resource "aws_iam_role" "ecs_code_deploy_role" {
+  name = "${var.app_name}_ecs_code_deploy_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "codedeploy.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  managed_policy_arns = [data.aws_iam_policy.ecs_code_deploy_policy.arn]
 }
