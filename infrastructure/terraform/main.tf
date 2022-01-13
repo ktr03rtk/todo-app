@@ -371,6 +371,9 @@ resource "aws_lb_listener_rule" "application" {
       values           = [var.alb_access_header_value]
     }
   }
+  lifecycle {
+    ignore_changes = [action]
+  }
 }
 
 # =========================================
@@ -570,14 +573,8 @@ resource "aws_ecs_service" "application" {
 
   enable_ecs_managed_tags = true
 
-  # TODO: use dynamic block
   load_balancer {
     target_group_arn = aws_lb_target_group.application["blue"].arn
-    container_name   = local.container_name
-    container_port   = 8080
-  }
-  load_balancer {
-    target_group_arn = aws_lb_target_group.application["green"].arn
     container_name   = local.container_name
     container_port   = 8080
   }
@@ -586,6 +583,10 @@ resource "aws_ecs_service" "application" {
     subnets          = [for subnet in aws_subnet.private : subnet.id]
     security_groups  = [aws_security_group.private.id]
     assign_public_ip = false
+  }
+
+  lifecycle {
+    ignore_changes = [desired_count, task_definition, load_balancer]
   }
 
   tags = {
