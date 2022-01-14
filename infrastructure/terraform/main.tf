@@ -656,6 +656,100 @@ resource "aws_codedeploy_deployment_group" "application" {
 }
 
 # =========================================
+# Autoscaling
+# =========================================
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 4
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.application.name}/${aws_ecs_service.application.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "ecs_scale_up" {
+  name               = "${var.app_name}-ecs-scale-up"
+  policy_type        = "StepScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_lower_bound = 0
+      scaling_adjustment          = 1
+    }
+  }
+}
+
+resource "aws_appautoscaling_policy" "ecs_scale_down" {
+  name               = "${var.app_name}-ecs-scale-down"
+  policy_type        = "StepScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_upper_bound = 0
+      scaling_adjustment          = -1
+    }
+  }
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
+  alarm_name          = "${var.app_name}-ecs-cpu-high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.application.name
+    ServiceName = aws_ecs_service.application.name
+  }
+
+  alarm_actions = [aws_appautoscaling_policy.ecs_scale_up.arn]
+
+  tags = {
+    Name = "${var.app_name}-ecs-cpu-high"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_low" {
+  alarm_name          = "${var.app_name}-ecs-cpu-low"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "30"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.application.name
+    ServiceName = aws_ecs_service.application.name
+  }
+
+  alarm_actions = [aws_appautoscaling_policy.ecs_scale_down.arn]
+
+  tags = {
+    Name = "${var.app_name}-ecs-cpu-low"
+  }
+}
+
+# =========================================
 # IAM
 # =========================================
 data "aws_iam_policy" "task_execution" {
