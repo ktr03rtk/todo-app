@@ -484,17 +484,6 @@ locals {
 resource "aws_ecs_cluster" "application" {
   name = local.cluster_name
 
-  configuration {
-    execute_command_configuration {
-      logging = "OVERRIDE"
-
-      log_configuration {
-        cloud_watch_encryption_enabled = true
-        cloud_watch_log_group_name     = aws_cloudwatch_log_group.ecs-cluster.name
-      }
-    }
-  }
-
   setting {
     name  = "containerInsights"
     value = "enabled"
@@ -502,15 +491,6 @@ resource "aws_ecs_cluster" "application" {
 
   tags = {
     Name = "${var.app_name}-ecs-cluster"
-  }
-}
-
-resource "aws_cloudwatch_log_group" "ecs-cluster" {
-  name              = "/aws/ecs/containerinsights/${local.cluster_name}/performance"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.app_name}-lg-ecs"
   }
 }
 
@@ -530,7 +510,7 @@ resource "aws_ecs_task_definition" "application" {
   container_definitions = format("[%s]", templatefile(
     "${path.module}/container_definitions.json",
     {
-      container_name = local.container_name
+      container_name = "${local.container_name}-test2"
       region         = var.region
       image_arn      = var.image_arn
     }
@@ -546,7 +526,7 @@ resource "aws_ecs_task_definition" "application" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "ecs-task" {
+resource "aws_cloudwatch_log_group" "ecs_task" {
   name              = "/ecs/${var.app_name}task"
   retention_in_days = 30
 
@@ -729,7 +709,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
 
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_low" {
   alarm_name          = "${var.app_name}-ecs-cpu-low"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
+  comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
@@ -757,7 +737,7 @@ data "aws_iam_policy" "task_execution" {
 }
 
 resource "aws_iam_role" "task_execution" {
-  name = "${var.app_name}_task_execution_role"
+  name = "${var.app_name}-task-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -780,7 +760,7 @@ data "aws_iam_policy" "ecs_code_deploy_policy" {
 }
 
 resource "aws_iam_role" "ecs_code_deploy_role" {
-  name = "${var.app_name}_ecs_code_deploy_role"
+  name = "${var.app_name}-ecs-code-deploy-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
