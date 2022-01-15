@@ -510,7 +510,7 @@ resource "aws_ecs_task_definition" "application" {
   container_definitions = format("[%s]", templatefile(
     "${path.module}/container_definitions.json",
     {
-      container_name = "${local.container_name}-test2"
+      container_name = local.container_name
       region         = var.region
       image_arn      = var.image_arn
     }
