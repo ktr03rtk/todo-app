@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "3.71.0"
+      version = "3.72.0"
     }
   }
 
@@ -418,7 +418,7 @@ resource "aws_cloudfront_distribution" "application" {
   aliases         = [var.sub_domain_name]
   enabled         = true
   is_ipv6_enabled = true
-
+  web_acl_id      = aws_wafv2_web_acl.application.arn
 
   origin {
     connection_attempts = 3
@@ -796,4 +796,124 @@ resource "aws_iam_role" "ecs_code_deploy_role" {
   })
 
   managed_policy_arns = [data.aws_iam_policy.ecs_code_deploy_policy.arn]
+}
+
+# =========================================
+# WAF
+# =========================================
+provider "aws" {
+  region = "us-east-1"
+  alias  = "global"
+
+  default_tags {
+    tags = { Environment = var.app_name }
+  }
+}
+
+resource "aws_wafv2_web_acl" "application" {
+  provider = aws.global
+  name     = "${var.app_name}-waf"
+  scope    = "CLOUDFRONT"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.app_name}-waf"
+    sampled_requests_enabled   = true
+  }
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWS-AWSManagedRulesCommonRuleSet"
+    priority = 0
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWS-AWSManagedRulesCommonRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS-AWSManagedRulesAnonymousIpList"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAnonymousIpList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWS-AWSManagedRulesAnonymousIpList"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS-AWSManagedRulesSQLiRuleSet"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesSQLiRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWS-AWSManagedRulesSQLiRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  tags = {
+    Name = "${var.app_name}-waf"
+  }
 }
