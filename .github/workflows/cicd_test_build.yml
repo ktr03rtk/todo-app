@@ -15,8 +15,8 @@ env:
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-  ECS_SERVICE: todo-app-ecs-cluster
-  ECS_CLUSTER: todo-app-ecs-service
+  ECS_CLUSTER: todo-app-ecs-cluster
+  ECS_SERVICE: todo-app-ecs-service
   ECS_TASK_NAME: todo-app-task
   ECS_CONTAINER_NAME: todo-app
   CODE_DEPLOY_APPLICATION: todo-app-deploy-app
@@ -113,8 +113,8 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@f2dce4be1c431cf5db770aec3991661fd9c62a19
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
           wait-for-service-stability: true
           codedeploy-application: ${{ env.CODE_DEPLOY_APPLICATION }}
           codedeploy-deployment-group: ${{ env.CODE_DEPLOYMENT_GROUP }}
