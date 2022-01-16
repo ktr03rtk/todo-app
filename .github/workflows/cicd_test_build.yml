@@ -107,7 +107,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: ${{ env.ECS_CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.digest }}
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@f2dce4be1c431cf5db770aec3991661fd9c62a19
