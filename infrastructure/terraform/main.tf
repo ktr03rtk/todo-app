@@ -498,7 +498,7 @@ locals {
   container_name = var.app_name
 }
 resource "aws_ecs_task_definition" "application" {
-  family                   = "${var.app_name}task"
+  family                   = "${var.app_name}-task"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 1024
@@ -527,7 +527,7 @@ resource "aws_ecs_task_definition" "application" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs_task" {
-  name              = "/ecs/${var.app_name}task"
+  name              = "/ecs/${var.app_name}-task"
   retention_in_days = 30
 
   tags = {
