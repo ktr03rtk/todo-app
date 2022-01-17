@@ -15,6 +15,10 @@ env:
   CODE_DEPLOY_APPLICATION: todo-app-deploy-app
   CODE_DEPLOYMENT_GROUP: todo-app-deployment
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
