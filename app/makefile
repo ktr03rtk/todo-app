@@ -3,7 +3,6 @@ TEST?=./...
 TESTARGS=-test.v
 TEST_FUNC=
 AWS_REGION=ap-northeast-1
-IMAGE=iotlogtransformfunction
 
 default: build
 
@@ -12,7 +11,7 @@ build: fmtcheck
 	docker build --target build-stage -t build-server .
 
 dev-run: build
-	docker run --rm -p 8080:8080 build-server:latest /opt/server
+	docker run --rm -it -p 8080:8080 -v ${PWD}:/opt build-server:latest make hot
 
 run: build
 	docker run --rm -p 8080:8080 server:latest /opt/server
@@ -36,6 +35,9 @@ ifndef FUNC
 else
 	reflex -r '\.go$$' -- gotest -run $(TESTFUNC) $(TEST) $(TESTARGS)
 endif
+
+hot:
+	reflex -r '(\.go$$|\.html$$)' -s go run main.go
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."

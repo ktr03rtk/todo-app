@@ -4,7 +4,8 @@ WORKDIR /opt
 COPY go.mod go.sum ./
 RUN go mod download \
   && go get -u github.com/rakyll/gotest \
-  && go get -u github.com/cespare/reflex
+  && go get -u github.com/cespare/reflex \
+  && apk -U add make
 
 COPY ./ ./
 RUN CGO_ENABLED=0 go build -o server
