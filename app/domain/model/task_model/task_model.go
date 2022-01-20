@@ -23,5 +23,5 @@ type Status int
 const (
 	Working Status = iota
 	Completed
-	Expired
+	Behind
 )
