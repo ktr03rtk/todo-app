@@ -3,7 +3,6 @@ package task_model
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -33,9 +32,10 @@ const (
 	POSTPONED_COUNT_LIMIT    = 3
 )
 
-func CreateTask(name, detail string, deadline time.Time) (*Task, error) {
+func CreateTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
 	t := Task{
-		taskID:            TaskID(uuid.Must(uuid.NewRandom()).String()),
+		taskID: id,
+		// taskID:            TaskID(uuid.Must(uuid.NewRandom()).String()),
 		name:              name,
 		detail:            detail,
 		status:            Working,
