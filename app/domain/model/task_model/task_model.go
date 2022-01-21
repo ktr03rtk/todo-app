@@ -34,7 +34,7 @@ const (
 )
 
 func CreateTask(name, detail string, deadline time.Time) (*Task, error) {
-	t := &Task{
+	t := Task{
 		taskID:            TaskID(uuid.Must(uuid.NewRandom()).String()),
 		name:              name,
 		detail:            detail,
@@ -45,11 +45,11 @@ func CreateTask(name, detail string, deadline time.Time) (*Task, error) {
 		postponedCount:    0,
 	}
 
-	if !TaskSpecSatisfied(&t) {
+	if !TaskSpecSatisfied(t) {
 		return nil, errors.Errorf("failed to specify Task. t: %+v", &t)
 	}
 
-	return t, nil
+	return &t, nil
 }
 
 func TaskSpecSatisfied(t Task) bool {
