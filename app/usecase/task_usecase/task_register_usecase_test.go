@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	"todo-app/mock"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"todo-app/mock"
 )
 
 func TestTaskRegisterUseCase(t *testing.T) {

@@ -2,11 +2,11 @@ package task_usecase
 
 import (
 	"time"
+
+	"github.com/pkg/errors"
 	"todo-app/domain/model/task_model"
 	"todo-app/domain/model/uuid_model"
 	"todo-app/domain/repository/task_repository"
-
-	"github.com/pkg/errors"
 )
 
 type TaskRegisterUsecase interface {
