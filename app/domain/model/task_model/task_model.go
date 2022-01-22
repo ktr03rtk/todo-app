@@ -32,10 +32,11 @@ const (
 	POSTPONED_COUNT_LIMIT    = 3
 )
 
+var getNow = time.Now
+
 func CreateTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
 	t := Task{
-		taskID: id,
-		// taskID:            TaskID(uuid.Must(uuid.NewRandom()).String()),
+		taskID:            id,
 		name:              name,
 		detail:            detail,
 		status:            Working,
@@ -45,13 +46,28 @@ func CreateTask(id TaskID, name, detail string, deadline time.Time) (*Task, erro
 		postponedCount:    0,
 	}
 
-	if !TaskSpecSatisfied(t) {
-		return nil, errors.Errorf("failed to specify Task. t: %+v", &t)
+	if err := TaskSpecSatisfied(t); err != nil {
+		return nil, errors.Wrapf(err, "failed to specify Task. t: %+v", t)
 	}
 
 	return &t, nil
 }
 
-func TaskSpecSatisfied(t Task) bool {
-	return (t.notificationCount <= NOTIFICATION_COUNT_LIMIT && t.postponedCount <= POSTPONED_COUNT_LIMIT)
+func TaskSpecSatisfied(t Task) error {
+	now := getNow()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+
+	if t.deadline.Before(today) {
+		return errors.Errorf("past day is set on deadline. t.deadline: %+v", t.deadline)
+	}
+
+	if t.notificationCount > NOTIFICATION_COUNT_LIMIT {
+		return errors.Errorf("notification counts exceeds limit. t.notificationCount: %+v", t.notificationCount)
+	}
+
+	if t.postponedCount > POSTPONED_COUNT_LIMIT {
+		return errors.Errorf("postponed counts exceeds limit. t.notificationCount: %+v", t.notificationCount)
+	}
+
+	return nil
 }
