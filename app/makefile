@@ -39,6 +39,9 @@ endif
 hot:
 	reflex -r '(\.go$$|\.html$$)' -s go run main.go
 
+generate: fmtcheck
+	go generate ./...
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w .
@@ -46,4 +49,4 @@ fmt:
 fmtcheck:
 	sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-.PHONY: default build dev-run run test_up test_down test hottest fmt fmtcheck
+.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck
