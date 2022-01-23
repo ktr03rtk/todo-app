@@ -22,7 +22,7 @@ EXPOSE 8080 2345
 ENTRYPOINT ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./debug_app"]
 
 
-FROM alpine
+FROM alpine as production-stage
 COPY --from=build-stage /opt/todo/server /usr/bin/server
 EXPOSE 8080
 ENTRYPOINT ["server"]

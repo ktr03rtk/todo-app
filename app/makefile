@@ -10,11 +10,11 @@ build: fmtcheck
 	docker build  -t server .
 	docker build --target build-stage -t build-server .
 
-dev-run: build
-	docker run --rm -it -p 8080:8080 -v ${PWD}:/opt/todo build-server:latest make hot
+dev-run:
+	TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
 
 run: build
-	docker run --rm -p 8080:8080 server:latest /opt/todo/server
+	TARGET=production-stage ENTRYPOINT="server" docker-compose up --build
 
 test:
 	gotest $(TEST) $(TESTARGS) -coverprofile=cover.out.tmp
