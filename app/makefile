@@ -49,4 +49,7 @@ fmt:
 fmtcheck:
 	sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck
+sql:
+	mysql --host=db --user=root --password=password todo
+
+.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck sql
