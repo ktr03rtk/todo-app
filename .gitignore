@@ -47,3 +47,6 @@ override.tf.json
 # example: *tfplan*
 
 *.tfvars
+
+# db
+app/db/mysql_data/*
