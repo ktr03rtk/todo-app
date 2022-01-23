@@ -1,0 +1,27 @@
+run:
+  concurrency: 4
+
+skip-files:
+  - "app/mock/mock_*\\.go"
+
+linters:
+  enable-all: true
+  disable:
+    - bodyclose
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - goheader
+    # - gomnd
+    - interfacer
+    - ireturn
+    - lll
+    - maligned
+    - scopelint
+    - unparam
+    - wrapcheck
+    # - wsl
+
+issues:
+  exclude-use-default: true
+  fix: true

@@ -13,7 +13,7 @@ func TestCreateTask(t *testing.T) {
 	id := TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
 
 	getNow = func() time.Time {
-		return time.Date(2022, 1, 25, 10, 10, 10, 000000000, time.Local)
+		return time.Date(2022, 1, 25, 10, 10, 10, 0o00000000, time.Local)
 	}
 
 	tests := []struct {
@@ -28,24 +28,24 @@ func TestCreateTask(t *testing.T) {
 			"normal case",
 			"Venue Reservation",
 			"Reserve venue for conference",
-			time.Date(2022, 1, 26, 00, 00, 00, 000000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 00, 00, 00, 000000000, time.Local), notificationCount: 0, postponedCount: 0},
+			time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local),
+			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
 			"",
 		},
 		{
 			"normal case(on the day of deadline)",
 			"Venue Reservation",
 			"Reserve venue for conference",
-			time.Date(2022, 1, 25, 00, 00, 00, 000000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 25, 00, 00, 00, 000000000, time.Local), notificationCount: 0, postponedCount: 0},
+			time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local),
+			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
 			"",
 		},
 		{
 			"error case(deadline is past)",
 			"Venue Reservation",
 			"Reserve venue for conference",
-			time.Date(2022, 1, 24, 00, 00, 00, 000000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 24, 00, 00, 00, 000000000, time.Local), notificationCount: 0, postponedCount: 0},
+			time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local),
+			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
 			"past day is set on deadline",
 		},
 	}
@@ -76,7 +76,7 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	id := TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
 
 	getNow = func() time.Time {
-		return time.Date(2022, 1, 25, 10, 10, 10, 000000000, time.Local)
+		return time.Date(2022, 1, 25, 10, 10, 10, 0o00000000, time.Local)
 	}
 
 	tests := []struct {
@@ -86,17 +86,17 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	}{
 		{
 			"normal case: count is under the limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 00, 00, 00, 000000000, time.Local), notificationCount: 5, postponedCount: 3},
+			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 5, postponedCount: 3},
 			"",
 		},
 		{
 			"error case: notification counts exceeds limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 00, 00, 00, 000000000, time.Local), notificationCount: 6, postponedCount: 0},
+			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 6, postponedCount: 0},
 			"notification counts exceeds limit",
 		},
 		{
 			"error case: postponed counts exceeds limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 00, 00, 00, 000000000, time.Local), notificationCount: 0, postponedCount: 4},
+			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 4},
 			"postponed counts exceeds limit",
 		},
 	}

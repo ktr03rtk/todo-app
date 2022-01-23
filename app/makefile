@@ -10,11 +10,11 @@ build: fmtcheck
 	docker build  -t server .
 	docker build --target build-stage -t build-server .
 
-dev-run: build
-	docker run --rm -it -p 8080:8080 -v ${PWD}:/opt build-server:latest make hot
+dev-run:
+	TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
 
 run: build
-	docker run --rm -p 8080:8080 server:latest /opt/server
+	TARGET=production-stage ENTRYPOINT="server" docker-compose up --build
 
 test:
 	gotest $(TEST) $(TESTARGS) -coverprofile=cover.out.tmp
@@ -22,8 +22,8 @@ test:
 	@go tool cover -html=cover.out -o cover.html
 	@rm -f cover.out cover.out.tmp
 
-test_up: test_down
-	docker run -ti --rm -p 8080:8080 -v $(PWD)/:/opt/ \
+test_up: test_down build
+	docker run -ti --rm -p 8080:8080 -v $(PWD)/:/opt/todo/ \
 		--name build-server -e ENVIRONMENT=development build-server:latest sh
 
 test_down:
@@ -49,4 +49,7 @@ fmt:
 fmtcheck:
 	sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck
+sql:
+	mysql --host=db --user=root --password=password todo
+
+.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck sql

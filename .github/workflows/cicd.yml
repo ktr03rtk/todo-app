@@ -25,6 +25,7 @@ env:
   ECS_CONTAINER_NAME: todo-app
   CODE_DEPLOY_APPLICATION: todo-app-deploy-app
   CODE_DEPLOYMENT_GROUP: todo-app-deployment
+  TZ: Asia/Tokyo
 
 permissions:
   id-token: write
@@ -79,6 +80,8 @@ jobs:
         uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229
         with:
           context: ./app
+          build-args: |
+            TZ=${{ env.TZ }}
           load: true
           target: build-stage
           tags: build-server:${{ github.sha }}
@@ -94,6 +97,8 @@ jobs:
         uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229
         with:
           context: ./app
+          build-args: |
+            TZ=${{ env.TZ }}
           push: true
           tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
