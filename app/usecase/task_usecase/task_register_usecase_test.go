@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"todo-app/mock"
@@ -11,11 +12,10 @@ import (
 
 func TestTaskRegisterUseCase(t *testing.T) {
 	tests := []struct {
-		name     string
-		taskName string
-		detail   string
-		deadline time.Time
-		// expectedInput task_model.Task
+		name              string
+		taskName          string
+		detail            string
+		deadline          time.Time
 		expectedOutput    error
 		expectedErr       string
 		expectedCallTimes int
