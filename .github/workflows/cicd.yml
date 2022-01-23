@@ -5,13 +5,13 @@ on:
     branches:
       - development
       - feature/*
-    # paths:
-    #   - "app/**"
+    paths:
+      - "app/**"
   pull_request:
     branches:
       - development
-    # paths:
-    #   - "app/**"
+    paths:
+      - "app/**"
 
 env:
   SLACK_CHANNEL: github-notification
