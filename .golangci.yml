@@ -8,11 +8,13 @@ linters:
   enable-all: true
   disable:
     - bodyclose
+    - gci
     - gochecknoglobals
     - gochecknoinits
     - goheader
     # - gomnd
     - interfacer
+    - ireturn
     - lll
     - maligned
     - scopelint
