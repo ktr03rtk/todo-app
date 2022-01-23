@@ -5,13 +5,13 @@ on:
     branches:
       - development
       - feature/*
-    paths:
-      - "app/**"
+    # paths:
+    #   - "app/**"
   pull_request:
     branches:
       - development
-    paths:
-      - "app/**"
+    # paths:
+    #   - "app/**"
 
 env:
   SLACK_CHANNEL: github-notification
@@ -80,7 +80,8 @@ jobs:
         uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229
         with:
           context: ./app
-          build-args: TZ=${{ env.TZ }}
+          build-args: |
+            TZ=${{ env.TZ }}
           load: true
           target: build-stage
           tags: build-server:${{ github.sha }}
