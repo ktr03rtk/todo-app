@@ -3,6 +3,8 @@ TEST?=./...
 TESTARGS=-test.v
 TEST_FUNC=
 AWS_REGION=ap-northeast-1
+SEQ=
+MYSQL_URL="mysql://root:password@tcp(db:3306)/todo?x-tls-insecure-skip-verify=false"
 
 default: build
 
@@ -49,7 +51,16 @@ fmt:
 fmtcheck:
 	sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
+create_migration:
+	migrate create -ext sql -dir db/migrations -seq $(SEQ)
+
+migrate_up:
+	migrate -database=$(MYSQL_URL) -path=db/migrations/ up
+
+migrate_down:
+	migrate -database=$(MYSQL_URL) -path=db/migrations/ down
+
 sql:
 	mysql --host=db --user=root --password=password todo
 
-.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck sql
+.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck create_migration migrate_up migrate_down sql

@@ -10,8 +10,9 @@ RUN apk add -U tzdata && \
 
 COPY go.mod go.sum ./
 RUN go mod download \
-  && go get -u github.com/rakyll/gotest \
-  && go get -u github.com/cespare/reflex \
+  && go install github.com/rakyll/gotest@latest \
+  && go install github.com/cespare/reflex@latest \
+  && go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest \
   && apk -U add make alpine-sdk mysql-client
 
 COPY ./ ./
