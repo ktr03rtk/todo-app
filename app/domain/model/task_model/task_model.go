@@ -7,14 +7,14 @@ import (
 )
 
 type Task struct {
-	taskID            TaskID
-	name              string
-	detail            string
-	status            Status
-	completionDate    time.Time
-	deadline          time.Time
-	notificationCount int
-	postponedCount    int
+	ID                TaskID
+	Name              string
+	Detail            string
+	Status            Status
+	CompletionDate    *time.Time
+	Deadline          time.Time
+	NotificationCount int
+	PostponedCount    int
 }
 
 type TaskID string
@@ -36,14 +36,14 @@ var getNow = time.Now
 
 func CreateTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
 	t := Task{
-		taskID:            id,
-		name:              name,
-		detail:            detail,
-		status:            Working,
-		completionDate:    time.Time{},
-		deadline:          deadline,
-		notificationCount: 0,
-		postponedCount:    0,
+		ID:                id,
+		Name:              name,
+		Detail:            detail,
+		Status:            Working,
+		CompletionDate:    nil,
+		Deadline:          deadline,
+		NotificationCount: 0,
+		PostponedCount:    0,
 	}
 
 	if err := TaskSpecSatisfied(t); err != nil {
@@ -57,16 +57,16 @@ func TaskSpecSatisfied(t Task) error {
 	now := getNow()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 
-	if t.deadline.Before(today) {
-		return errors.Errorf("past day is set on deadline. t.deadline: %+v", t.deadline)
+	if t.Deadline.Before(today) {
+		return errors.Errorf("past day is set on deadline. t.deadline: %+v", t.Deadline)
 	}
 
-	if t.notificationCount > NOTIFICATION_COUNT_LIMIT {
-		return errors.Errorf("notification counts exceeds limit. t.notificationCount: %+v", t.notificationCount)
+	if t.NotificationCount > NOTIFICATION_COUNT_LIMIT {
+		return errors.Errorf("notification counts exceeds limit. t.notificationCount: %+v", t.NotificationCount)
 	}
 
-	if t.postponedCount > POSTPONED_COUNT_LIMIT {
-		return errors.Errorf("postponed counts exceeds limit. t.notificationCount: %+v", t.notificationCount)
+	if t.PostponedCount > POSTPONED_COUNT_LIMIT {
+		return errors.Errorf("postponed counts exceeds limit. t.notificationCount: %+v", t.PostponedCount)
 	}
 
 	return nil
