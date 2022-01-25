@@ -49,7 +49,7 @@ func main() {
 
 var Db *gorm.DB
 
-func init() {
+func taskCreate() {
 	var err error
 	dsn := "root:password@tcp(db:3306)/todo?charset=utf8mb4&parseTime=True&loc=Local"
 
@@ -57,9 +57,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
 
-func taskCreate() {
 	id := task_model.TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
 	name := "test task"
 	detail := "create test task"

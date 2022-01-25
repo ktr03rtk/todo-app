@@ -29,7 +29,7 @@ func TestCreateTask(t *testing.T) {
 			"Venue Reservation",
 			"Reserve venue for conference",
 			time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
+			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
 			"",
 		},
 		{
@@ -37,7 +37,7 @@ func TestCreateTask(t *testing.T) {
 			"Venue Reservation",
 			"Reserve venue for conference",
 			time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
+			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
 			"",
 		},
 		{
@@ -45,7 +45,7 @@ func TestCreateTask(t *testing.T) {
 			"Venue Reservation",
 			"Reserve venue for conference",
 			time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 0},
+			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
 			"past day is set on deadline",
 		},
 	}
@@ -86,17 +86,17 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	}{
 		{
 			"normal case: count is under the limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 5, postponedCount: 3},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 5, PostponedCount: 3},
 			"",
 		},
 		{
 			"error case: notification counts exceeds limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 6, postponedCount: 0},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 6, PostponedCount: 0},
 			"notification counts exceeds limit",
 		},
 		{
 			"error case: postponed counts exceeds limit",
-			Task{taskID: id, name: "Venue Reservation", detail: "Reserve venue for conference", status: Working, completionDate: time.Time{}, deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), notificationCount: 0, postponedCount: 4},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 4},
 			"postponed counts exceeds limit",
 		},
 	}
