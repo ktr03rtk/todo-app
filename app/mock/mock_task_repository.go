@@ -6,7 +6,7 @@ package mock
 
 import (
 	reflect "reflect"
-	task_model "todo-app/domain/model/task_model"
+	taskModel "todo-app/domain/model/taskModel"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -34,11 +34,25 @@ func (m *MockTaskRepository) EXPECT() *MockTaskRepositoryMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockTaskRepository) Create(arg0 taskModel.Task) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockTaskRepositoryMockRecorder) Create(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockTaskRepository)(nil).Create), arg0)
+}
+
 // FindByID mocks base method.
-func (m *MockTaskRepository) FindByID(arg0 task_model.TaskID) (task_model.Task, error) {
+func (m *MockTaskRepository) FindByID(arg0 taskModel.TaskID) (taskModel.Task, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByID", arg0)
-	ret0, _ := ret[0].(task_model.Task)
+	ret0, _ := ret[0].(taskModel.Task)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -47,18 +61,4 @@ func (m *MockTaskRepository) FindByID(arg0 task_model.TaskID) (task_model.Task, 
 func (mr *MockTaskRepositoryMockRecorder) FindByID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockTaskRepository)(nil).FindByID), arg0)
-}
-
-// Insert mocks base method.
-func (m *MockTaskRepository) Insert(arg0 task_model.Task) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Insert indicates an expected call of Insert.
-func (mr *MockTaskRepositoryMockRecorder) Insert(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockTaskRepository)(nil).Insert), arg0)
 }

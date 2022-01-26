@@ -5,12 +5,13 @@ TEST_FUNC=
 AWS_REGION=ap-northeast-1
 SEQ=
 MYSQL_URL="mysql://root:password@tcp(db:3306)/todo?x-tls-insecure-skip-verify=false"
+TZ?=Asia/Tokyo
 
 default: build
 
 build: fmtcheck
-	docker build  -t server .
-	docker build --target build-stage -t build-server .
+	TARGET=build-stage ENTRYPOINT="sh" docker build  -t server --build-arg TZ=$(TZ) .
+	TARGET=production-stage ENTRYPOINT="server" docker build --target build-stage -t build-server --build-arg TZ=$(TZ) .
 
 dev-run:
 	TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build

@@ -1,4 +1,4 @@
-package task_usecase
+package taskUsecase
 
 import (
 	"fmt"
@@ -58,7 +58,7 @@ func TestTaskRegisterUseCase(t *testing.T) {
 			taskRepository := mock.NewMockTaskRepository(ctrl)
 			usecase := NewTaskRegisterUsecase(taskRepository)
 
-			taskRepository.EXPECT().Insert(gomock.Any()).Return(tt.expectedOutput).Times(tt.expectedCallTimes)
+			taskRepository.EXPECT().Create(gomock.Any()).Return(tt.expectedOutput).Times(tt.expectedCallTimes)
 
 			if err := usecase.Execute(tt.taskName, tt.detail, tt.deadline); err != nil {
 				assert.Contains(t, err.Error(), tt.expectedErr)

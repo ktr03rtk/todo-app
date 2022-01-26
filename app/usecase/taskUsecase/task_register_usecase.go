@@ -1,10 +1,10 @@
-package task_usecase
+package taskUsecase
 
 import (
 	"time"
-	"todo-app/domain/model/task_model"
-	"todo-app/domain/model/uuid_model"
-	"todo-app/domain/repository/task_repository"
+	"todo-app/domain/model/taskModel"
+	"todo-app/domain/model/uuidModel"
+	"todo-app/domain/repository/taskRepository"
 
 	"github.com/pkg/errors"
 )
@@ -14,22 +14,22 @@ type TaskRegisterUsecase interface {
 }
 
 type taskRegisterUsecase struct {
-	taskRepository task_repository.TaskRepository
+	taskRepository taskRepository.TaskRepository
 }
 
-func NewTaskRegisterUsecase(tr task_repository.TaskRepository) TaskRegisterUsecase {
+func NewTaskRegisterUsecase(tr taskRepository.TaskRepository) TaskRegisterUsecase {
 	return &taskRegisterUsecase{taskRepository: tr}
 }
 
 func (u *taskRegisterUsecase) Execute(name, detail string, deadline time.Time) error {
-	id := uuid_model.CreateUUID()
+	id := uuidModel.CreateUUID()
 
-	t, err := task_model.CreateTask(task_model.TaskID(id), name, detail, deadline)
+	t, err := taskModel.CreateTask(taskModel.TaskID(id), name, detail, deadline)
 	if err != nil {
 		return errors.Wrap(err, "failed to create task")
 	}
 
-	if err := u.taskRepository.Insert(*t); err != nil {
+	if err := u.taskRepository.Create(*t); err != nil {
 		return errors.Wrap(err, "failed to store task")
 	}
 

@@ -1,4 +1,4 @@
-package task_model
+package taskModel
 
 import (
 	"testing"

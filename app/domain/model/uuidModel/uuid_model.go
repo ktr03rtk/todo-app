@@ -1,4 +1,4 @@
-package uuid_model
+package uuidModel
 
 import "github.com/google/uuid"
 
