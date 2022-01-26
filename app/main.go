@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"text/template"
 	"time"
-	"todo-app/domain/model/task_model"
+	"todo-app/config"
+	"todo-app/domain/model"
+	"todo-app/infrastructure/persistence"
 
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -34,8 +35,10 @@ func main() {
 		Addr: "0.0.0.0:8080",
 	}
 
-	taskCreate()
-	taskRead()
+	conn := config.NewDBConn()
+
+	id := taskCreate(conn)
+	taskRead(conn, id)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
@@ -47,35 +50,31 @@ func main() {
 	server.ListenAndServe()
 }
 
-var Db *gorm.DB
-
-func taskCreate() {
-	var err error
-	dsn := "root:password@tcp(db:3306)/todo?charset=utf8mb4&parseTime=True&loc=Local"
-
-	Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
-
-	id := task_model.TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
+func taskCreate(conn *gorm.DB) model.TaskID {
+	id := model.TaskID(model.CreateUUID())
 	name := "test task"
 	detail := "create test task"
 	deadline := time.Now().Add(48 * time.Hour)
 
-	task, err := task_model.CreateTask(id, name, detail, deadline)
+	task, err := model.CreateTask(id, name, detail, deadline)
 	fmt.Printf("--------------- %+v\n", task)
 	if err != nil {
 		panic(err)
 	}
 
-	result := Db.Create(&task)
-	fmt.Printf("--------------- %+v\n", result)
+	tp := persistence.NewTaskPersistence(conn)
+	if err := tp.Create(task); err != nil {
+		panic(err)
+	}
+
+	return id
 }
 
-func taskRead() {
-	id := task_model.TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
-	var task task_model.Task
-	Db.Take(&task, id)
+func taskRead(conn *gorm.DB, id model.TaskID) {
+	tp := persistence.NewTaskPersistence(conn)
+	task, err := tp.FindByID(id)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("--------------- %+v\n", task)
 }

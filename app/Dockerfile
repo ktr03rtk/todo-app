@@ -12,6 +12,7 @@ COPY go.mod go.sum ./
 RUN go mod download \
   && go install github.com/rakyll/gotest@latest \
   && go install github.com/cespare/reflex@latest \
+  && go install github.com/golang/mock/mockgen@v1.6.0 \
   && go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest \
   && apk -U add make alpine-sdk mysql-client
 
