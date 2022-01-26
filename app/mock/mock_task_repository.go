@@ -6,7 +6,7 @@ package mock
 
 import (
 	reflect "reflect"
-	taskModel "todo-app/domain/model/taskModel"
+	model "todo-app/domain/model"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -35,7 +35,7 @@ func (m *MockTaskRepository) EXPECT() *MockTaskRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockTaskRepository) Create(arg0 taskModel.Task) error {
+func (m *MockTaskRepository) Create(arg0 *model.Task) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0)
 	ret0, _ := ret[0].(error)
@@ -49,10 +49,10 @@ func (mr *MockTaskRepositoryMockRecorder) Create(arg0 interface{}) *gomock.Call 
 }
 
 // FindByID mocks base method.
-func (m *MockTaskRepository) FindByID(arg0 taskModel.TaskID) (taskModel.Task, error) {
+func (m *MockTaskRepository) FindByID(arg0 model.TaskID) (*model.Task, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByID", arg0)
-	ret0, _ := ret[0].(taskModel.Task)
+	ret0, _ := ret[0].(*model.Task)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

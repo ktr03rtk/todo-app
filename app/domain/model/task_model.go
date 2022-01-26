@@ -1,4 +1,4 @@
-package taskModel
+package model
 
 import (
 	"time"

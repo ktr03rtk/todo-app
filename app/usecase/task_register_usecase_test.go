@@ -1,4 +1,4 @@
-package taskUsecase
+package usecase
 
 import (
 	"fmt"
