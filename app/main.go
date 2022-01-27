@@ -8,6 +8,7 @@ import (
 	"todo-app/config"
 	"todo-app/domain/model"
 	"todo-app/infrastructure/persistence"
+	"todo-app/usecase"
 
 	"gorm.io/gorm"
 )
@@ -37,8 +38,8 @@ func main() {
 
 	conn := config.NewDBConn()
 
-	id := taskCreate(conn)
-	taskRead(conn, id)
+	taskCreate(conn)
+	taskRead(conn)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
@@ -50,31 +51,27 @@ func main() {
 	server.ListenAndServe()
 }
 
-func taskCreate(conn *gorm.DB) model.TaskID {
-	id := model.TaskID(model.CreateUUID())
+func taskCreate(conn *gorm.DB) {
 	name := "test task"
 	detail := "create test task"
 	deadline := time.Now().Add(48 * time.Hour)
 
-	task, err := model.CreateTask(id, name, detail, deadline)
-	fmt.Printf("--------------- %+v\n", task)
-	if err != nil {
-		panic(err)
-	}
-
 	tp := persistence.NewTaskPersistence(conn)
-	if err := tp.Create(task); err != nil {
+	usecase := usecase.NewTaskCreateUsecase(tp)
+	if err := usecase.Execute(name, detail, deadline); err != nil {
 		panic(err)
 	}
-
-	return id
 }
 
-func taskRead(conn *gorm.DB, id model.TaskID) {
+func taskRead(conn *gorm.DB) {
+	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
 	tp := persistence.NewTaskPersistence(conn)
-	task, err := tp.FindByID(id)
+	usecase := usecase.NewTaskFetchUsecase(tp)
+
+	task, err := usecase.Execute(id)
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Printf("--------------- %+v\n", task)
 }
