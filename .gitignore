@@ -50,3 +50,5 @@ override.tf.json
 
 # db
 app/db/mysql_data/*
+
+dump.sql

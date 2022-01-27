@@ -62,6 +62,15 @@ migrate_down:
 	migrate -database=$(MYSQL_URL) -path=db/migrations/ down
 
 sql:
-	mysql --host=db --user=root --password=password todo
+	mysql -h db -u root -ppassword todo
 
-.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck create_migration migrate_up migrate_down sql
+sqldump:
+	mysqldump -h db -u root -ppassword --databases todo > db/dump.sql
+
+drop_table:
+	mysql -h db -u root -ppassword todo -e'DROP TABLE tasks;'
+
+restore_table:
+	mysql -h db -u root -ppassword < db/dump.sql
+
+.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck create_migration migrate_up migrate_down sql sqldump drop_table restore_table
