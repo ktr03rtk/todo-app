@@ -8,22 +8,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TaskRegisterUsecase interface {
+type TaskCreateUsecase interface {
 	Execute(name, detail string, deadline time.Time) error
 }
 
-type taskRegisterUsecase struct {
+type taskCreateUsecase struct {
 	taskRepository repository.TaskRepository
 }
 
-func NewTaskRegisterUsecase(tr repository.TaskRepository) TaskRegisterUsecase {
-	return &taskRegisterUsecase{taskRepository: tr}
+func NewTaskCreateUsecase(tr repository.TaskRepository) TaskCreateUsecase {
+	return &taskCreateUsecase{taskRepository: tr}
 }
 
-func (u *taskRegisterUsecase) Execute(name, detail string, deadline time.Time) error {
+func (u *taskCreateUsecase) Execute(name, detail string, deadline time.Time) error {
 	id := model.CreateUUID()
 
-	t, err := model.CreateTask(model.TaskID(id), name, detail, deadline)
+	t, err := model.NewTask(model.TaskID(id), name, detail, deadline)
 	if err != nil {
 		return errors.Wrap(err, "failed to create task")
 	}

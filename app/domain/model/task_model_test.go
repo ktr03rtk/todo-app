@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateTask(t *testing.T) {
+func TestNewTask(t *testing.T) {
 	t.Parallel()
 
 	id := TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
@@ -55,7 +55,7 @@ func TestCreateTask(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := CreateTask(id, tt.taskName, tt.detail, tt.deadline)
+			output, err := NewTask(id, tt.taskName, tt.detail, tt.deadline)
 			if err != nil {
 				if tt.expectedErr != "" {
 					assert.Contains(t, err.Error(), tt.expectedErr)

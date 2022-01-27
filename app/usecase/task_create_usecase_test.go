@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTaskRegisterUseCase(t *testing.T) {
+func TestTaskCreateUseCase(t *testing.T) {
 	tests := []struct {
 		name              string
 		taskName          string
@@ -56,7 +56,7 @@ func TestTaskRegisterUseCase(t *testing.T) {
 			defer ctrl.Finish()
 
 			taskRepository := mock.NewMockTaskRepository(ctrl)
-			usecase := NewTaskRegisterUsecase(taskRepository)
+			usecase := NewTaskCreateUsecase(taskRepository)
 
 			taskRepository.EXPECT().Create(gomock.Any()).Return(tt.expectedOutput).Times(tt.expectedCallTimes)
 
