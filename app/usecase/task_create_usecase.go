@@ -23,7 +23,7 @@ func NewTaskCreateUsecase(tr repository.TaskRepository) TaskCreateUsecase {
 func (u *taskCreateUsecase) Execute(name, detail string, deadline time.Time) error {
 	id := model.CreateUUID()
 
-	t, err := model.CreateTask(model.TaskID(id), name, detail, deadline)
+	t, err := model.NewTask(model.TaskID(id), name, detail, deadline)
 	if err != nil {
 		return errors.Wrap(err, "failed to create task")
 	}

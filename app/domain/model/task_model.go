@@ -34,7 +34,7 @@ const (
 
 var getNow = time.Now
 
-func CreateTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
+func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
 	t := Task{
 		ID:                id,
 		Name:              name,
