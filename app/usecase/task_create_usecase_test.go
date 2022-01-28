@@ -30,15 +30,6 @@ func TestTaskCreateUseCase(t *testing.T) {
 			1,
 		},
 		{
-			"error case(deadline is past)",
-			"Venue Reservation",
-			"Reserve venue for conference",
-			time.Now().AddDate(0, 0, -1),
-			nil,
-			"past day is set on deadline",
-			0,
-		},
-		{
 			"error case(fail to store)",
 			"Venue Reservation",
 			"Reserve venue for conference",

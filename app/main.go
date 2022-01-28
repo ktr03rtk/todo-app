@@ -40,6 +40,8 @@ func main() {
 
 	taskCreate(conn)
 	taskRead(conn)
+	taskUpdate(conn)
+	taskRead(conn)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
@@ -74,4 +76,20 @@ func taskRead(conn *gorm.DB) {
 	}
 
 	fmt.Printf("--------------- %+v\n", task)
+}
+
+func taskUpdate(conn *gorm.DB) {
+	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
+	name := "updated task"
+	detail := "updated test task"
+	status := model.Completed
+	deadline := time.Now().Add(48 * time.Hour)
+
+	tp := persistence.NewTaskPersistence(conn)
+	usecase := usecase.NewTaskUpdateUsecase(tp)
+
+	err := usecase.Execute(id, name, detail, status, deadline)
+	if err != nil {
+		panic(err)
+	}
 }

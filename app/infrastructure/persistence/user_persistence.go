@@ -35,3 +35,7 @@ func (tp *TaskPersistence) FindByID(id model.TaskID) (*model.Task, error) {
 
 	return t, nil
 }
+
+func (tp *TaskPersistence) Update(t *model.Task) error {
+	return tp.conn.Save(&t).Error
+}

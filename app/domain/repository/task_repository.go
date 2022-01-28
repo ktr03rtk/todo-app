@@ -6,4 +6,5 @@ import "todo-app/domain/model"
 type TaskRepository interface {
 	Create(*model.Task) error
 	FindByID(model.TaskID) (*model.Task, error)
+	Update(*model.Task) error
 }

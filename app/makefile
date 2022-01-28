@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 TEST?=./...
 TESTARGS=-test.v
-TEST_FUNC=
+FUNC=
 AWS_REGION=ap-northeast-1
 SEQ=
 MYSQL_URL="mysql://root:password@tcp(db:3306)/todo?x-tls-insecure-skip-verify=false"
@@ -36,7 +36,7 @@ hottest:
 ifndef FUNC
 	reflex -r '\.go$$' -- gotest $(TEST) $(TESTARGS)
 else
-	reflex -r '\.go$$' -- gotest -run $(TESTFUNC) $(TEST) $(TESTARGS)
+	reflex -r '\.go$$' -- gotest -run $(FUNC) $(TEST) $(TESTARGS)
 endif
 
 hot:
