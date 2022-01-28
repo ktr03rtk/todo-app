@@ -13,7 +13,7 @@ func TestNewTask(t *testing.T) {
 	id := TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
 
 	getNow = func() time.Time {
-		return time.Date(2022, 1, 25, 10, 10, 10, 0o00000000, time.Local)
+		return time.Date(2022, 1, 25, 10, 10, 10, 0, time.Local)
 	}
 
 	tests := []struct {
@@ -28,25 +28,17 @@ func TestNewTask(t *testing.T) {
 			"normal case",
 			"Venue Reservation",
 			"Reserve venue for conference",
-			time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
+			time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local),
+			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 0},
 			"",
 		},
 		{
 			"normal case(on the day of deadline)",
 			"Venue Reservation",
 			"Reserve venue for conference",
-			time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 25, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
+			time.Date(2022, 1, 25, 0, 0, 0, 0, time.Local),
+			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 25, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 0},
 			"",
-		},
-		{
-			"error case(deadline is past)",
-			"Venue Reservation",
-			"Reserve venue for conference",
-			time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local),
-			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 24, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 0},
-			"past day is set on deadline",
 		},
 	}
 
@@ -76,7 +68,7 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	id := TaskID("72c24944-f532-4c5d-a695-70fa3e72f3ab")
 
 	getNow = func() time.Time {
-		return time.Date(2022, 1, 25, 10, 10, 10, 0o00000000, time.Local)
+		return time.Date(2022, 1, 25, 10, 10, 10, 0, time.Local)
 	}
 
 	tests := []struct {
@@ -86,17 +78,17 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	}{
 		{
 			"normal case: count is under the limit",
-			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 5, PostponedCount: 3},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 5, PostponedCount: 3},
 			"",
 		},
 		{
 			"error case: notification counts exceeds limit",
-			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 6, PostponedCount: 0},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 6, PostponedCount: 0},
 			"notification counts exceeds limit",
 		},
 		{
 			"error case: postponed counts exceeds limit",
-			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0o0, 0o0, 0o0, 0o00000000, time.Local), NotificationCount: 0, PostponedCount: 4},
+			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 4},
 			"postponed counts exceeds limit",
 		},
 	}

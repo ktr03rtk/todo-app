@@ -35,13 +35,15 @@ const (
 var getNow = time.Now
 
 func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
+	dl := time.Date(deadline.Year(), deadline.Month(), deadline.Day(), 0, 0, 0, 0, time.Local)
+
 	t := Task{
 		ID:                id,
 		Name:              name,
 		Detail:            detail,
 		Status:            Working,
 		CompletionDate:    nil,
-		Deadline:          deadline,
+		Deadline:          dl,
 		NotificationCount: 0,
 		PostponedCount:    0,
 	}
@@ -54,13 +56,6 @@ func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) 
 }
 
 func TaskSpecSatisfied(t Task) error {
-	now := getNow()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-
-	if t.Deadline.Before(today) {
-		return errors.Errorf("past day is set on deadline. t.deadline: %+v", t.Deadline)
-	}
-
 	if t.NotificationCount > NOTIFICATION_COUNT_LIMIT {
 		return errors.Errorf("notification counts exceeds limit. t.notificationCount: %+v", t.NotificationCount)
 	}
@@ -70,4 +65,36 @@ func TaskSpecSatisfied(t Task) error {
 	}
 
 	return nil
+}
+
+func TaskSet(fetchedTask Task, name, detail string, status Status, deadline time.Time) (*Task, error) {
+	t, err := NewTask(fetchedTask.ID, name, detail, deadline)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create task")
+	}
+
+	t.Status = status
+	t.PostponedCount = fetchedTask.PostponedCount
+	t.NotificationCount = fetchedTask.NotificationCount
+
+	if t.Deadline.After(fetchedTask.Deadline) {
+		t.PostponedCount++
+	}
+
+	return calculate(*t), nil
+}
+
+func calculate(t Task) *Task {
+	now := getNow()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+
+	if t.Status != Completed && today.After(t.Deadline) {
+		t.Status = Behind
+	}
+
+	if t.Status == Completed && t.CompletionDate == nil {
+		t.CompletionDate = &today
+	}
+
+	return &t
 }

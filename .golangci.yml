@@ -19,6 +19,7 @@ linters:
     - maligned
     - scopelint
     - unparam
+    - varnamelen
     - wrapcheck
     # - wsl
 
