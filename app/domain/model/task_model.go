@@ -70,7 +70,7 @@ func TaskSpecSatisfied(t Task) error {
 func TaskSet(fetchedTask Task, name, detail string, status Status, deadline time.Time) (*Task, error) {
 	t, err := NewTask(fetchedTask.ID, name, detail, deadline)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create task")
+		return nil, errors.Wrap(err, "failed to set task")
 	}
 
 	t.Status = status
