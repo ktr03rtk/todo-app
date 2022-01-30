@@ -1,4 +1,4 @@
-{{ define "task_list" }}
+{{ define "content" }}
 
 <h1>Task list</h1>
 
@@ -6,7 +6,7 @@
   {{ range .}}
   <li class="list-group-item d-flex justify-content-between align-items-start">
     <div class="ms-2 me-auto">
-      <div class="fw-bold">{{ .Name}}</div>
+      <div class="fw-bold"><a href="/task/{{ .ID }}">{{ .Name}}</a></div>
       {{ if eq .Status 0 }} Working {{ else if eq .Status 1 }} Completed {{ else
       }} Behind {{ end }}
     </div>
