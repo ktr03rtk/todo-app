@@ -8,6 +8,7 @@ import (
 	"todo-app/config"
 	"todo-app/domain/model"
 	"todo-app/infrastructure/persistence"
+	"todo-app/interfaces/handler"
 	"todo-app/usecase"
 
 	"gorm.io/gorm"
@@ -32,26 +33,30 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	server := http.Server{
-		Addr: "0.0.0.0:8080",
-	}
+	// server := http.Server{
+	// 	Addr: "0.0.0.0:8080",
+	// }
 
 	conn := config.NewDBConn()
+	taskRepository := persistence.NewTaskPersistence(conn)
+	taskUsecase := usecase.NewTaskUsecase(taskRepository)
+	handler := handler.NewHandler(taskUsecase)
+	handler.Start()
 
-	taskCreate(conn)
-	taskRead(conn)
-	taskUpdate(conn)
-	taskRead(conn)
-	taskReadAll(conn)
+	// taskCreate(conn)
+	// taskRead(conn)
+	// taskUpdate(conn)
+	// taskRead(conn)
+	// taskReadAll(conn)
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/first", firstHandler)
-	http.HandleFunc("/second", secondHandler)
-	http.HandleFunc("/task", taskHandler)
+	// http.HandleFunc("/", rootHandler)
+	// http.HandleFunc("/first", firstHandler)
+	// http.HandleFunc("/second", secondHandler)
+	// http.HandleFunc("/task", taskHandler)
 
-	fmt.Println("server start")
+	// fmt.Println("server start")
 
-	server.ListenAndServe()
+	// server.ListenAndServe()
 }
 
 func taskCreate(conn *gorm.DB) {
