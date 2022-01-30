@@ -48,6 +48,21 @@ func (mr *MockTaskRepositoryMockRecorder) Create(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockTaskRepository)(nil).Create), arg0)
 }
 
+// FindAll mocks base method.
+func (m *MockTaskRepository) FindAll() ([]*model.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAll")
+	ret0, _ := ret[0].([]*model.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAll indicates an expected call of FindAll.
+func (mr *MockTaskRepositoryMockRecorder) FindAll() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockTaskRepository)(nil).FindAll))
+}
+
 // FindByID mocks base method.
 func (m *MockTaskRepository) FindByID(arg0 model.TaskID) (*model.Task, error) {
 	m.ctrl.T.Helper()

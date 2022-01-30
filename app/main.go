@@ -42,6 +42,7 @@ func main() {
 	taskRead(conn)
 	taskUpdate(conn)
 	taskRead(conn)
+	taskReadAll(conn)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
@@ -68,7 +69,7 @@ func taskCreate(conn *gorm.DB) {
 func taskRead(conn *gorm.DB) {
 	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
 	tp := persistence.NewTaskPersistence(conn)
-	usecase := usecase.NewTaskFetchUsecase(tp)
+	usecase := usecase.NewTaskFetchByIDUsecase(tp)
 
 	task, err := usecase.Execute(id)
 	if err != nil {
@@ -91,5 +92,20 @@ func taskUpdate(conn *gorm.DB) {
 	err := usecase.Execute(id, name, detail, status, deadline)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func taskReadAll(conn *gorm.DB) {
+	tp := persistence.NewTaskPersistence(conn)
+	usecase := usecase.NewTaskFetchAllUsecase(tp)
+
+	tasks, err := usecase.Execute()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("find all -------------------")
+	for i, t := range tasks {
+		fmt.Printf("---------------%v, %#v\n", i, t)
 	}
 }

@@ -36,6 +36,15 @@ func (tp *TaskPersistence) FindByID(id model.TaskID) (*model.Task, error) {
 	return t, nil
 }
 
+func (tp *TaskPersistence) FindAll() ([]*model.Task, error) {
+	var tasks []*model.Task
+	if err := tp.conn.Find(&tasks).Error; err != nil {
+		return nil, errors.Wrapf(err, "failed to find all tasks")
+	}
+
+	return tasks, nil
+}
+
 func (tp *TaskPersistence) Update(t *model.Task) error {
 	return tp.conn.Save(&t).Error
 }
