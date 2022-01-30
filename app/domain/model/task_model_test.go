@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -22,7 +23,7 @@ func TestNewTask(t *testing.T) {
 		detail         string
 		deadline       time.Time
 		expectedOutput *Task
-		expectedErr    string
+		expectedErr    error
 	}{
 		{
 			"normal case",
@@ -30,7 +31,7 @@ func TestNewTask(t *testing.T) {
 			"Reserve venue for conference",
 			time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local),
 			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 		{
 			"normal case(on the day of deadline)",
@@ -38,7 +39,7 @@ func TestNewTask(t *testing.T) {
 			"Reserve venue for conference",
 			time.Date(2022, 1, 25, 0, 0, 0, 0, time.Local),
 			&Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 25, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 	}
 
@@ -49,13 +50,13 @@ func TestNewTask(t *testing.T) {
 
 			output, err := NewTask(id, tt.taskName, tt.detail, tt.deadline)
 			if err != nil {
-				if tt.expectedErr != "" {
-					assert.Contains(t, err.Error(), tt.expectedErr)
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
 				} else {
 					t.Fatalf("error is not expected but received: %v", err)
 				}
 			} else {
-				assert.Exactly(t, tt.expectedErr, "", "error is expected but received nil")
+				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 				assert.Exactly(t, tt.expectedOutput, output)
 			}
 		})
@@ -74,22 +75,22 @@ func TestTaskSpecSatisfied(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       Task
-		expectedErr string
+		expectedErr error
 	}{
 		{
 			"normal case: count is under the limit",
 			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 5, PostponedCount: 3},
-			"",
+			nil,
 		},
 		{
 			"error case: notification counts exceeds limit",
 			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 6, PostponedCount: 0},
-			"notification counts exceeds limit",
+			errors.New("notification counts exceeds limit"),
 		},
 		{
 			"error case: postponed counts exceeds limit",
 			Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: time.Date(2022, 1, 26, 0, 0, 0, 0, time.Local), NotificationCount: 0, PostponedCount: 4},
-			"postponed counts exceeds limit",
+			errors.New("postponed counts exceeds limit"),
 		},
 	}
 
@@ -99,13 +100,13 @@ func TestTaskSpecSatisfied(t *testing.T) {
 			t.Parallel()
 
 			if err := TaskSpecSatisfied(tt.input); err != nil {
-				if tt.expectedErr != "" {
-					assert.Contains(t, err.Error(), tt.expectedErr)
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
 				} else {
 					t.Fatalf("error is not expected but received: %v", err)
 				}
 			} else {
-				assert.Exactly(t, tt.expectedErr, "", "error is expected but received nil")
+				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 			}
 		})
 	}
@@ -134,7 +135,7 @@ func TestTaskSet(t *testing.T) {
 		deadline       time.Time
 		date           time.Time
 		expectedOutput *Task
-		expectedErr    string
+		expectedErr    error
 	}{
 		{
 			"normal case",
@@ -142,7 +143,7 @@ func TestTaskSet(t *testing.T) {
 			createdDate,
 			referenceDate,
 			&Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: createdDate, NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 		{
 			"postponed case",
@@ -150,7 +151,7 @@ func TestTaskSet(t *testing.T) {
 			postponedDate,
 			referenceDate,
 			&Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: Working, CompletionDate: nil, Deadline: postponedDate, NotificationCount: 0, PostponedCount: 1},
-			"",
+			nil,
 		},
 		{
 			"completed in time case",
@@ -158,7 +159,7 @@ func TestTaskSet(t *testing.T) {
 			createdDate,
 			referenceDate,
 			&Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: Completed, CompletionDate: &completedDate, Deadline: createdDate, NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 		{
 			"behind completed case",
@@ -166,7 +167,7 @@ func TestTaskSet(t *testing.T) {
 			createdDate,
 			behindDate,
 			&Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: Completed, CompletionDate: &behindCompletedDate, Deadline: createdDate, NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 		{
 			"behind working case",
@@ -174,7 +175,7 @@ func TestTaskSet(t *testing.T) {
 			createdDate,
 			behindDate,
 			&Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: Behind, CompletionDate: nil, Deadline: createdDate, NotificationCount: 0, PostponedCount: 0},
-			"",
+			nil,
 		},
 	}
 
@@ -186,13 +187,13 @@ func TestTaskSet(t *testing.T) {
 			getNow = func() time.Time { return tt.date }
 			output, err := TaskSet(fetchedTask, updatedTaskName, updatedTaskDetail, tt.status, tt.deadline)
 			if err != nil {
-				if tt.expectedErr != "" {
-					assert.Contains(t, err.Error(), tt.expectedErr)
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
 				} else {
 					t.Fatalf("error is not expected but received: %v", err)
 				}
 			} else {
-				assert.Exactly(t, tt.expectedErr, "", "error is expected but received nil")
+				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 				assert.Exactly(t, tt.expectedOutput, output)
 			}
 		})
