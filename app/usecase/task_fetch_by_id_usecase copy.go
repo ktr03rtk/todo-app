@@ -7,19 +7,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TaskFetchUsecase interface {
+type TaskFetchByIDUsecase interface {
 	Execute(id model.TaskID) (*model.Task, error)
 }
 
-type taskFetchUsecase struct {
+type taskFetchByIDUsecase struct {
 	taskRepository repository.TaskRepository
 }
 
-func NewTaskFetchUsecase(tr repository.TaskRepository) TaskFetchUsecase {
-	return &taskFetchUsecase{taskRepository: tr}
+func NewTaskFetchByIDUsecase(tr repository.TaskRepository) TaskFetchByIDUsecase {
+	return &taskFetchByIDUsecase{taskRepository: tr}
 }
 
-func (u *taskFetchUsecase) Execute(id model.TaskID) (*model.Task, error) {
+func (u *taskFetchByIDUsecase) Execute(id model.TaskID) (*model.Task, error) {
 	t, err := u.taskRepository.FindByID(id)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to fetch task, taskID: %s", id)
