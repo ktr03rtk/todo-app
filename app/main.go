@@ -47,7 +47,7 @@ func main() {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/first", firstHandler)
 	http.HandleFunc("/second", secondHandler)
-	http.HandleFunc("/tasks", taskHandler)
+	http.HandleFunc("/task", taskHandler)
 
 	fmt.Println("server start")
 
@@ -60,8 +60,8 @@ func taskCreate(conn *gorm.DB) {
 	deadline := time.Now().Add(48 * time.Hour)
 
 	tp := persistence.NewTaskPersistence(conn)
-	usecase := usecase.NewTaskCreateUsecase(tp)
-	if err := usecase.Execute(name, detail, deadline); err != nil {
+	usecase := usecase.NewTaskUsecase(tp)
+	if err := usecase.Create(name, detail, deadline); err != nil {
 		panic(err)
 	}
 }
@@ -69,9 +69,9 @@ func taskCreate(conn *gorm.DB) {
 func taskRead(conn *gorm.DB) {
 	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
 	tp := persistence.NewTaskPersistence(conn)
-	usecase := usecase.NewTaskFetchByIDUsecase(tp)
+	usecase := usecase.NewTaskUsecase(tp)
 
-	task, err := usecase.Execute(id)
+	task, err := usecase.FindByID(id)
 	if err != nil {
 		panic(err)
 	}
@@ -87,9 +87,9 @@ func taskUpdate(conn *gorm.DB) {
 	deadline := time.Now().Add(48 * time.Hour)
 
 	tp := persistence.NewTaskPersistence(conn)
-	usecase := usecase.NewTaskUpdateUsecase(tp)
+	usecase := usecase.NewTaskUsecase(tp)
 
-	err := usecase.Execute(id, name, detail, status, deadline)
+	err := usecase.Update(id, name, detail, status, deadline)
 	if err != nil {
 		panic(err)
 	}
@@ -97,9 +97,9 @@ func taskUpdate(conn *gorm.DB) {
 
 func taskReadAll(conn *gorm.DB) {
 	tp := persistence.NewTaskPersistence(conn)
-	usecase := usecase.NewTaskFetchAllUsecase(tp)
+	usecase := usecase.NewTaskUsecase(tp)
 
-	tasks, err := usecase.Execute()
+	tasks, err := usecase.FindAll()
 	if err != nil {
 		panic(err)
 	}
