@@ -35,11 +35,14 @@ var funcMap = template.FuncMap{
 
 func (h *handler) Start() {
 	router := httprouter.New()
-	router.GET("/tasks", h.findAllTask)
-	router.GET("/tasks/:id", h.findTask)
-	router.GET("/tasks/:id/edit", h.editTask)
 
-	router.POST("/tasks/:id", h.updateTask)
+	// TODO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
+	router.GET("/tasks", h.findAllTask)
+	router.GET("/tasks/new", h.newTask)
+	router.POST("/tasks", h.createTask)
+	router.GET("/tasks/show/:id", h.findTask)
+	router.GET("/tasks/show/:id/edit", h.editTask)
+	router.POST("/tasks/show/:id", h.updateTask)
 
 	fmt.Println("server start")
 	log.Fatal(http.ListenAndServe(":8080", router))
@@ -61,6 +64,40 @@ func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprout
 
 		return
 	}
+}
+
+func (h *handler) newTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	files := []string{"templates/layout.html", "templates/task_new.html"}
+	templates := template.Must(template.ParseFiles(files...))
+
+	if err := templates.ExecuteTemplate(w, "layout", nil); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (h *handler) createTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := r.ParseForm(); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	deadline, err := time.Parse(timeLayout, r.PostFormValue("deadline"))
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	if err := h.taskUsecase.Create(r.PostFormValue("name"), r.PostFormValue("detail"), deadline); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	http.Redirect(w, r, "/tasks", http.StatusFound)
 }
 
 func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -132,7 +169,7 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	url := fmt.Sprint("/tasks/", id)
+	url := fmt.Sprint("/tasks/show/", id)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 

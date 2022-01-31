@@ -3,7 +3,7 @@
 <h1>Task edit</h1>
 
 <div style="width: 30rem">
-  <form action="/tasks/{{.ID}}" method="post">
+  <form action="/tasks/show/{{.ID}}" method="post">
     <div class="mb-3">
       <label for="name" class="form-label">Task name</label>
       <input
@@ -60,7 +60,9 @@
 
     <div class="col-auto">
       <button type="submit" class="btn btn-primary">Update task</button>
-      <a class="btn btn-secondary" href="/tasks/{{.ID}}" role="button">Back</a>
+      <a class="btn btn-secondary" href="/tasks/show/{{.ID}}" role="button"
+        >Back</a
+      >
     </div>
   </form>
 </div>
