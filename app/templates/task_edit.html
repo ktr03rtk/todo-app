@@ -1,0 +1,68 @@
+{{ define "content" }}
+
+<h1>Task edit</h1>
+
+<div style="width: 30rem">
+  <form action="/tasks/{{.ID}}" method="post">
+    <div class="mb-3">
+      <label for="name" class="form-label">Task name</label>
+      <input
+        type="text"
+        class="form-control"
+        id="name"
+        name="name"
+        value="{{.Name}}"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label for="detail" class="form-label">Task detail</label>
+      <textarea class="form-control" id="detail" name="detail" rows="3">
+{{.Detail}}</textarea
+      >
+    </div>
+
+    <div class="mb-3">
+      <label for="status" class="form-label">Status</label>
+      <select
+        id="status"
+        name="status"
+        class="form-select"
+        aria-label="Default select example"
+      >
+        <option
+          value="0"
+          {{if
+          or
+          (eq
+          .Status
+          0)
+          (eq
+          .Status
+          2)}}selected{{end}}
+        >
+          Working
+        </option>
+        <option value="1" {{if eq .Status 1}}selected{{end}}>Completed</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="deadline" class="form-label">Deadline</label>
+      <input
+        type="date"
+        class="form-control"
+        id="deadline"
+        name="deadline"
+        value="{{ formatDate .Deadline}}"
+      />
+    </div>
+
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Update task</button>
+      <a class="btn btn-secondary" href="/tasks/{{.ID}}" role="button">Back</a>
+    </div>
+  </form>
+</div>
+
+{{ end }}

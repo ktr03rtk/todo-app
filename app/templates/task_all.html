@@ -6,7 +6,7 @@
   {{ range .}}
   <li class="list-group-item d-flex justify-content-between align-items-start">
     <div class="ms-2 me-auto">
-      <div class="fw-bold"><a href="/task/{{ .ID }}">{{ .Name}}</a></div>
+      <div class="fw-bold"><a href="/tasks/{{ .ID }}">{{ .Name}}</a></div>
       {{ if eq .Status 0 }} Working {{ else if eq .Status 1 }} Completed {{ else
       }} Behind {{ end }}
     </div>
