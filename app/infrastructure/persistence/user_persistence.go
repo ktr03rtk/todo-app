@@ -8,43 +8,30 @@ import (
 	"gorm.io/gorm"
 )
 
-type TaskPersistence struct {
+type UserPersistence struct {
 	conn *gorm.DB
 }
 
-func NewTaskPersistence(conn *gorm.DB) repository.TaskRepository {
-	return &TaskPersistence{
+func NewUserPersistence(conn *gorm.DB) repository.UserRepository {
+	return &UserPersistence{
 		conn,
 	}
 }
 
-func (tp *TaskPersistence) Create(task *model.Task) error {
-	if err := tp.conn.Create(&task).Error; err != nil {
-		return errors.Wrapf(err, "failed to create task. task: %+v", &task)
+func (up *UserPersistence) Create(user *model.User) error {
+	if err := up.conn.Create(&user).Error; err != nil {
+		return errors.Wrapf(err, "failed to create user. user email: %+v", &user.Email)
 	}
 
 	return nil
 }
 
-func (tp *TaskPersistence) FindByID(id model.TaskID) (*model.Task, error) {
-	t := &model.Task{ID: id}
+func (up *UserPersistence) FindByID(email model.Email) (*model.User, error) {
+	t := &model.User{Email: email}
 
-	if err := tp.conn.First(&t).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed to find task. id: %+v", id)
+	if err := up.conn.First(&t).Error; err != nil {
+		return nil, errors.Wrapf(err, "failed to find user. user email: %+v", t.Email)
 	}
 
 	return t, nil
-}
-
-func (tp *TaskPersistence) FindAll() ([]*model.Task, error) {
-	var tasks []*model.Task
-	if err := tp.conn.Find(&tasks).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed to find all tasks")
-	}
-
-	return tasks, nil
-}
-
-func (tp *TaskPersistence) Update(t *model.Task) error {
-	return tp.conn.Save(&t).Error
 }

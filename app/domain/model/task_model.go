@@ -37,7 +37,7 @@ var getNow = time.Now
 func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
 	dl := time.Date(deadline.Year(), deadline.Month(), deadline.Day(), 0, 0, 0, 0, time.Local)
 
-	t := Task{
+	t := &Task{
 		ID:                id,
 		Name:              name,
 		Detail:            detail,
@@ -48,11 +48,11 @@ func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) 
 		PostponedCount:    0,
 	}
 
-	if err := TaskSpecSatisfied(t); err != nil {
-		return nil, errors.Wrapf(err, "failed to specify Task. t: %+v", t)
+	if err := TaskSpecSatisfied(*t); err != nil {
+		return nil, errors.Wrapf(err, "failed to satisfy Task spec. t: %+v", t)
 	}
 
-	return &t, nil
+	return t, nil
 }
 
 func TaskSpecSatisfied(t Task) error {
