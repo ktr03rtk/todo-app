@@ -62,6 +62,7 @@ func passwordSpecSatisfied(pw string) error {
 }
 
 func UserSpecSatisfied(u User) error {
+	// TODO: email が未使用
 	if !emailValidater.MatchString(string(u.Email)) {
 		return errors.Errorf("invalid email pattern")
 	}
