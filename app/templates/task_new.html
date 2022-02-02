@@ -6,7 +6,7 @@
   <form action="/tasks" method="post">
     <div class="mb-3">
       <label for="name" class="form-label">Task name</label>
-      <input type="text" class="form-control" id="name" name="name" />
+      <input type="text" class="form-control" id="name" name="name" required />
     </div>
 
     <div class="mb-3">
@@ -21,7 +21,13 @@
 
     <div class="mb-3">
       <label for="deadline" class="form-label">Deadline</label>
-      <input type="date" class="form-control" id="deadline" name="deadline" />
+      <input
+        type="date"
+        class="form-control"
+        id="deadline"
+        name="deadline"
+        required
+      />
     </div>
 
     <div class="col-auto">

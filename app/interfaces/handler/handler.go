@@ -37,12 +37,15 @@ func (h *handler) Start() {
 	router := httprouter.New()
 
 	// TODO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
+	router.GET("/", h.findAllTask)
 	router.GET("/tasks", h.findAllTask)
 	router.GET("/tasks/new", h.newTask)
 	router.POST("/tasks", h.createTask)
 	router.GET("/tasks/show/:id", h.findTask)
 	router.GET("/tasks/show/:id/edit", h.editTask)
 	router.POST("/tasks/show/:id", h.updateTask)
+
+	router.GET("/signup", h.signup)
 
 	fmt.Println("server start")
 	log.Fatal(http.ListenAndServe(":8080", router))
@@ -171,6 +174,17 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 
 	url := fmt.Sprint("/tasks/show/", id)
 	http.Redirect(w, r, url, http.StatusFound)
+}
+
+func (h *handler) signup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	files := []string{"templates/layout.html", "templates/signup.html"}
+	templates := template.Must(template.ParseFiles(files...))
+
+	if err := templates.ExecuteTemplate(w, "layout", nil); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
 }
 
 func errorResponse(w http.ResponseWriter, err error, errorCode int) {
