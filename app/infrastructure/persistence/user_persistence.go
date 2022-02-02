@@ -26,7 +26,7 @@ func (up *UserPersistence) Create(user *model.User) error {
 	return nil
 }
 
-func (up *UserPersistence) FindByID(email model.Email) (*model.User, error) {
+func (up *UserPersistence) FindByEmail(email model.Email) (*model.User, error) {
 	t := &model.User{Email: email}
 
 	if err := up.conn.First(&t).Error; err != nil {
