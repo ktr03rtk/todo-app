@@ -19,10 +19,14 @@ type Handler interface {
 
 type handler struct {
 	taskUsecase usecase.TaskUsecase
+	userUsecase usecase.UserUsecase
 }
 
-func NewHandler(u usecase.TaskUsecase) Handler {
-	return &handler{taskUsecase: u}
+func NewHandler(tu usecase.TaskUsecase, uu usecase.UserUsecase) Handler {
+	return &handler{
+		taskUsecase: tu,
+		userUsecase: uu,
+	}
 }
 
 const timeLayout = "2006-01-02"
@@ -37,7 +41,7 @@ func (h *handler) Start() {
 	router := httprouter.New()
 
 	// TODO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
-	router.GET("/", h.findAllTask)
+	router.GET("/", h.home)
 	router.GET("/tasks", h.findAllTask)
 	router.GET("/tasks/new", h.newTask)
 	router.POST("/tasks", h.createTask)
@@ -46,9 +50,21 @@ func (h *handler) Start() {
 	router.POST("/tasks/show/:id", h.updateTask)
 
 	router.GET("/signup", h.signup)
+	router.POST("/signup", h.signupUser)
 
 	fmt.Println("server start")
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func (h *handler) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	files := []string{"templates/layout.html", "templates/home.html"}
+	templates := template.Must(template.ParseFiles(files...))
+
+	if err := templates.ExecuteTemplate(w, "layout", nil); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
 }
 
 func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -185,6 +201,22 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 		return
 	}
+}
+
+func (h *handler) signupUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := r.ParseForm(); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	if err := h.userUsecase.Signup(r.PostFormValue("email"), r.PostFormValue("password")); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func errorResponse(w http.ResponseWriter, err error, errorCode int) {

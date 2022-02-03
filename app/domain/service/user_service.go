@@ -23,9 +23,7 @@ func (s *userService) IsExists(email model.Email) (bool, error) {
 	u, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to find user, email: %s", email)
-	}
-
-	if u.ID == "" {
+	} else if u == nil {
 		return false, nil
 	}
 

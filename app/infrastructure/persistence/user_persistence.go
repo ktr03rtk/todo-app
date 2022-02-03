@@ -29,7 +29,9 @@ func (up *UserPersistence) Create(user *model.User) error {
 func (up *UserPersistence) FindByEmail(email model.Email) (*model.User, error) {
 	t := &model.User{Email: email}
 
-	if err := up.conn.First(&t).Error; err != nil {
+	if err := up.conn.Where(&t).First(&t).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else if err != nil {
 		return nil, errors.Wrapf(err, "failed to find user. user email: %+v", t.Email)
 	}
 
