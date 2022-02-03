@@ -2,6 +2,7 @@ package main
 
 import (
 	"todo-app/config"
+	"todo-app/domain/service"
 	"todo-app/infrastructure/persistence"
 	"todo-app/interfaces/handler"
 	"todo-app/usecase"
@@ -10,8 +11,11 @@ import (
 func main() {
 	conn := config.NewDBConn()
 	taskRepository := persistence.NewTaskPersistence(conn)
+	userRepository := persistence.NewUserPersistence(conn)
 	taskUsecase := usecase.NewTaskUsecase(taskRepository)
-	handler := handler.NewHandler(taskUsecase)
+	userService := service.NewUService(userRepository)
+	userUsecase := usecase.NewUserUsecase(userRepository, userService)
+	handler := handler.NewHandler(taskUsecase, userUsecase)
 
 	handler.Start()
 }
