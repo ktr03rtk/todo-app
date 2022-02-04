@@ -43,7 +43,7 @@ var funcMap = template.FuncMap{
 func (h *handler) Start() {
 	router := httprouter.New()
 
-	// TODO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
+	// INFO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
 	router.GET("/", h.home)
 	router.GET("/tasks", h.findAllTask)
 	router.GET("/tasks/new", h.newTask)
@@ -57,12 +57,22 @@ func (h *handler) Start() {
 
 	router.GET("/login", h.login)
 	router.POST("/login", h.authenticate)
+	router.GET("/logout", h.logout)
 
 	fmt.Println("server start")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func (h *handler) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s != nil {
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	}
+
 	files := []string{"templates/layout.html", "templates/home.html"}
 	templates := template.Must(template.ParseFiles(files...))
 
@@ -273,15 +283,6 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 func (h *handler) signupUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.session(r)
-	if err != nil {
-		errorResponse(w, err, http.StatusInternalServerError)
-
-		return
-	} else if s != nil {
-		http.Redirect(w, r, "/tasks", http.StatusFound)
-	}
-
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
@@ -318,26 +319,18 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 }
 
 func (h *handler) authenticate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.session(r)
-	if err != nil {
-		errorResponse(w, err, http.StatusInternalServerError)
-
-		return
-	} else if s != nil {
-		http.Redirect(w, r, "/tasks", http.StatusFound)
-	}
-
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
 		return
 	}
 
-	if err := h.userUsecase.Authenticate(r.PostFormValue("email"), r.PostFormValue("password")); err != nil {
+	id, err := h.userUsecase.Authenticate(r.PostFormValue("email"), r.PostFormValue("password"))
+	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
 	}
 
-	session, err := h.sessionUsecase.CreateSession(model.UserID(r.PostFormValue("email")))
+	session, err := h.sessionUsecase.CreateSession(id)
 	if err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
@@ -353,6 +346,25 @@ func (h *handler) authenticate(w http.ResponseWriter, r *http.Request, ps httpro
 
 	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/tasks", http.StatusFound)
+}
+
+func (h *handler) logout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
+	if err := h.sessionUsecase.DeleteSession(s.UserID); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func (h *handler) session(r *http.Request) (*usecase.Session, error) {

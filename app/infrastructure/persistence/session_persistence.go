@@ -50,10 +50,10 @@ func (up *SessionPersistence) FindByUserID(id model.UserID) (*usecase.Session, e
 	return s, nil
 }
 
-func (up *SessionPersistence) Delete(id usecase.SessionID) error {
-	s := &usecase.Session{ID: id}
+func (up *SessionPersistence) Delete(id model.UserID) error {
+	s := &usecase.Session{UserID: id}
 
-	if err := up.conn.Delete(&s).Error; err != nil {
+	if err := up.conn.Where(&s).Delete(&s).Error; err != nil {
 		return errors.Wrapf(err, "failed to create session. session id: %+v", id)
 	}
 
