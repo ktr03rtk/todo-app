@@ -62,9 +62,16 @@ func passwordSpecSatisfied(pw string) error {
 }
 
 func UserSpecSatisfied(u User) error {
-	// TODO: email が未使用
 	if !emailValidater.MatchString(string(u.Email)) {
 		return errors.Errorf("invalid email pattern")
+	}
+
+	return nil
+}
+
+func (u *User) ValidatePassword(password string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
+		return errors.Wrapf(err, "fail to authenticate password")
 	}
 
 	return nil
