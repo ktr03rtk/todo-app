@@ -11,6 +11,7 @@ import (
 	"todo-app/usecase"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 )
 
 type Handler interface {
@@ -18,14 +19,16 @@ type Handler interface {
 }
 
 type handler struct {
-	taskUsecase usecase.TaskUsecase
-	userUsecase usecase.UserUsecase
+	taskUsecase    usecase.TaskUsecase
+	userUsecase    usecase.UserUsecase
+	sessionUsecase usecase.SessionUsecase
 }
 
-func NewHandler(tu usecase.TaskUsecase, uu usecase.UserUsecase) Handler {
+func NewHandler(tu usecase.TaskUsecase, uu usecase.UserUsecase, su usecase.SessionUsecase) Handler {
 	return &handler{
-		taskUsecase: tu,
-		userUsecase: uu,
+		taskUsecase:    tu,
+		userUsecase:    uu,
+		sessionUsecase: su,
 	}
 }
 
@@ -52,6 +55,9 @@ func (h *handler) Start() {
 	router.GET("/signup", h.signup)
 	router.POST("/signup", h.signupUser)
 
+	router.GET("/login", h.login)
+	router.POST("/login", h.authenticate)
+
 	fmt.Println("server start")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -68,6 +74,15 @@ func (h *handler) home(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 }
 
 func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	tasks, err := h.taskUsecase.FindAll()
 	if err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
@@ -86,6 +101,15 @@ func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprout
 }
 
 func (h *handler) newTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	files := []string{"templates/layout.html", "templates/task_new.html"}
 	templates := template.Must(template.ParseFiles(files...))
 
@@ -97,6 +121,15 @@ func (h *handler) newTask(w http.ResponseWriter, r *http.Request, _ httprouter.P
 }
 
 func (h *handler) createTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
@@ -120,6 +153,15 @@ func (h *handler) createTask(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	id := model.TaskID(ps.ByName("id"))
 
 	task, err := h.taskUsecase.FindByID(id)
@@ -140,6 +182,15 @@ func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	id := model.TaskID(ps.ByName("id"))
 
 	task, err := h.taskUsecase.FindByID(id)
@@ -160,6 +211,15 @@ func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
@@ -193,6 +253,15 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 func (h *handler) signup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s != nil {
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	}
+
 	files := []string{"templates/layout.html", "templates/signup.html"}
 	templates := template.Must(template.ParseFiles(files...))
 
@@ -204,6 +273,15 @@ func (h *handler) signup(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 func (h *handler) signupUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s != nil {
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	}
+
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
 
@@ -217,6 +295,78 @@ func (h *handler) signupUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (h *handler) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s != nil {
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	}
+
+	files := []string{"templates/layout.html", "templates/login.html"}
+	templates := template.Must(template.ParseFiles(files...))
+
+	if err := templates.ExecuteTemplate(w, "layout", nil); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (h *handler) authenticate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, err := h.session(r)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	} else if s != nil {
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	}
+
+	if err := r.ParseForm(); err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	if err := h.userUsecase.Authenticate(r.PostFormValue("email"), r.PostFormValue("password")); err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
+	session, err := h.sessionUsecase.CreateSession(model.UserID(r.PostFormValue("email")))
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:     "todo_cookie",
+		Value:    string(session.ID),
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "/tasks", http.StatusFound)
+}
+
+func (h *handler) session(r *http.Request) (*usecase.Session, error) {
+	cookie, err := r.Cookie("todo_cookie")
+	if err != nil {
+		return nil, nil
+	}
+
+	session, err := h.sessionUsecase.Verify(usecase.SessionID(cookie.Value))
+	if err != nil {
+		return nil, errors.Wrapf(err, "fail to verify cookie")
+	}
+
+	return session, nil
 }
 
 func errorResponse(w http.ResponseWriter, err error, errorCode int) {

@@ -10,6 +10,7 @@ import (
 
 type UserUsecase interface {
 	Signup(email, password string) error
+	Authenticate(email, password string) error
 }
 
 type userUsecase struct {
@@ -41,6 +42,19 @@ func (u *userUsecase) Signup(email, password string) error {
 
 	if err := u.userRepository.Create(user); err != nil {
 		return errors.Wrap(err, "failed to store user")
+	}
+
+	return nil
+}
+
+func (u *userUsecase) Authenticate(email, password string) error {
+	user, err := u.userRepository.FindByEmail(model.Email(email))
+	if err != nil {
+		return errors.Wrap(err, "failed to find user")
+	}
+
+	if err := user.ValidatePassword(password); err != nil {
+		return err
 	}
 
 	return nil

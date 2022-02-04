@@ -12,10 +12,12 @@ func main() {
 	conn := config.NewDBConn()
 	taskRepository := persistence.NewTaskPersistence(conn)
 	userRepository := persistence.NewUserPersistence(conn)
+	sessionRepository := persistence.NewSessionPersistence(conn)
 	taskUsecase := usecase.NewTaskUsecase(taskRepository)
 	userService := service.NewUService(userRepository)
 	userUsecase := usecase.NewUserUsecase(userRepository, userService)
-	handler := handler.NewHandler(taskUsecase, userUsecase)
+	sessionUsecase := usecase.NewSessionUsecase(sessionRepository)
+	handler := handler.NewHandler(taskUsecase, userUsecase, sessionUsecase)
 
 	handler.Start()
 }
