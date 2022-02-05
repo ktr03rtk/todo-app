@@ -114,7 +114,7 @@ func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter
 		errorResponse(w, r, err)
 	}
 
-	files := []string{"templates/layout.html", "templates/task_edit.html"}
+	files := []string{"/opt/templates/layout.html", "/opt/templates/task_edit.html"}
 	templates := template.Must(template.New("editTask").Funcs(funcMap).ParseFiles(files...))
 
 	if err := templates.ExecuteTemplate(w, "layout", task); err != nil {

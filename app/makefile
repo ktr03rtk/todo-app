@@ -10,14 +10,15 @@ TZ?=Asia/Tokyo
 default: build
 
 build: fmtcheck
-	TARGET=build-stage ENTRYPOINT="sh" docker build  -t server --build-arg TZ=$(TZ) .
-	TARGET=production-stage ENTRYPOINT="server" docker build --target build-stage -t build-server --build-arg TZ=$(TZ) .
+	docker build --target build-stage -t build-server --build-arg TZ=$(TZ) .
+	docker build -t server --build-arg TZ=$(TZ) .
 
 dev-run:
-	TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
+	COMPOSE_FILE="docker-compose.yml:docker-compose-dev.yml" \
+		TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
 
 run: build
-	TARGET=production-stage ENTRYPOINT="server" docker-compose up --build
+	docker-compose up --build
 
 test:
 	gotest $(TEST) $(TESTARGS) -coverprofile=cover.out.tmp
@@ -27,7 +28,7 @@ test:
 
 test_up: test_down build
 	docker run -ti --rm -p 8080:8080 -v $(PWD)/:/opt/todo/ \
-		--name build-server -e ENVIRONMENT=development build-server:latest sh
+		--name build-server -e ENVIRONMENT=development build-server:latest
 
 test_down:
 	docker rm -f build-server

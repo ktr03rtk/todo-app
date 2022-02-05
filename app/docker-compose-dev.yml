@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  app:
+    build:
+      target: ${TARGET}
+    volumes:
+      - ${PWD}/:/opt/todo
+    entrypoint: ${ENTRYPOINT}
