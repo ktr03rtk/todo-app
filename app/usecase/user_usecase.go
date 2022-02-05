@@ -9,7 +9,7 @@ import (
 )
 
 type UserUsecase interface {
-	Signup(email, password string) error
+	SignUp(email, password string) error
 	Authenticate(email, password string) (model.UserID, error)
 }
 
@@ -25,7 +25,7 @@ func NewUserUsecase(ur repository.UserRepository, us service.UserService) UserUs
 	}
 }
 
-func (u *userUsecase) Signup(email, password string) error {
+func (u *userUsecase) SignUp(email, password string) error {
 	ok, err := u.userService.IsExists(model.Email(email))
 	if ok {
 		return errors.Errorf("already registered email. email: %s", email)

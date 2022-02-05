@@ -45,7 +45,7 @@ func TestUserSignupUseCase(t *testing.T) {
 			0,
 		},
 		{
-			"alredy user registered case",
+			"already user registered case",
 			"abc@example.com",
 			"password123",
 			&model.User{ID: id, Email: "abc@example.com", Password: "$2a$10$bUJO2D0iREJl.350fkaJIeXVdEL9yNcHT8smkC90j0kQ9okVVKfsq"},
@@ -81,7 +81,7 @@ func TestUserSignupUseCase(t *testing.T) {
 				userRepository.EXPECT().Create(gomock.Any()).Return(tt.CreateErrOutput).Times(tt.expectedCallTimes),
 			)
 
-			if err := usecase.Signup(tt.email, tt.password); err != nil {
+			if err := usecase.SignUp(tt.email, tt.password); err != nil {
 				assert.Contains(t, err.Error(), tt.expectedOutput.Error())
 			} else {
 				assert.Nil(t, tt.expectedOutput, "error is expected but received nil")
