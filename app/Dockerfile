@@ -20,7 +20,7 @@ COPY ./ ./
 COPY ./templates /opt/templates
 RUN CGO_ENABLED=0 go build -o server
 
-ENTRYPOINT ["/bin/sh"]
+CMD ["/bin/sh"]
 
 ##################
 FROM golang:1.17-alpine as debug-stage
