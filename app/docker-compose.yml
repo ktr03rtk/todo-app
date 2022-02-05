@@ -13,7 +13,7 @@ services:
       - ./:/opt/todo
     entrypoint: ${ENTRYPOINT}
     environment:
-      DB_HOST: localhost
+      DB_HOST: db:3306
       DB_USERNAME: mysql
       DB_PASSWORD: mypassword
       DB_NAME: todo
@@ -28,7 +28,7 @@ services:
       - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_USER: mysql
-      MYSQL_PASSWORD: password
+      MYSQL_PASSWORD: mypassword
       MYSQL_DATABASE: todo
       MYSQL_ROOT_PASSWORD: password
       TZ: Asia/Tokyo
