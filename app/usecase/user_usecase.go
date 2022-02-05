@@ -9,8 +9,8 @@ import (
 )
 
 type UserUsecase interface {
-	Signup(email, password string) error
-	Authenticate(email, password string) error
+	SignUp(email, password string) error
+	Authenticate(email, password string) (model.UserID, error)
 }
 
 type userUsecase struct {
@@ -25,7 +25,7 @@ func NewUserUsecase(ur repository.UserRepository, us service.UserService) UserUs
 	}
 }
 
-func (u *userUsecase) Signup(email, password string) error {
+func (u *userUsecase) SignUp(email, password string) error {
 	ok, err := u.userService.IsExists(model.Email(email))
 	if ok {
 		return errors.Errorf("already registered email. email: %s", email)
@@ -47,15 +47,17 @@ func (u *userUsecase) Signup(email, password string) error {
 	return nil
 }
 
-func (u *userUsecase) Authenticate(email, password string) error {
+func (u *userUsecase) Authenticate(email, password string) (model.UserID, error) {
 	user, err := u.userRepository.FindByEmail(model.Email(email))
 	if err != nil {
-		return errors.Wrap(err, "failed to find user")
+		return "", errors.Wrap(err, "failed to find user")
+	} else if user == nil {
+		return "", errors.New("user is not registered")
 	}
 
 	if err := user.ValidatePassword(password); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return user.ID, nil
 }

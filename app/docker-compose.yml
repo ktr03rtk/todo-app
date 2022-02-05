@@ -1,24 +1,21 @@
 version: "3.8"
 services:
   app:
-    container_name: app
+    container_name: server
     build:
       context: .
-      target: ${TARGET}
       args:
         TZ: Asia/Tokyo
     depends_on:
       - db
-    volumes:
-      - ./:/opt/todo
-    entrypoint: ${ENTRYPOINT}
     environment:
-      DB_HOST: localhost
+      DB_HOST: db:3306
       DB_USERNAME: mysql
       DB_PASSWORD: mypassword
       DB_NAME: todo
     ports:
       - 8080:8080
+    restart: always
 
   db:
     container_name: db
@@ -28,7 +25,7 @@ services:
       - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_USER: mysql
-      MYSQL_PASSWORD: password
+      MYSQL_PASSWORD: mypassword
       MYSQL_DATABASE: todo
       MYSQL_ROOT_PASSWORD: password
       TZ: Asia/Tokyo

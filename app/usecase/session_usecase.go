@@ -10,7 +10,7 @@ import (
 type SessionUsecase interface {
 	CreateSession(model.UserID) (*Session, error)
 	Verify(SessionID) (*Session, error)
-	DeleteSession(SessionID) error
+	DeleteSession(model.UserID) error
 }
 
 type sessionUsecase struct {
@@ -21,7 +21,7 @@ type SessionRepository interface {
 	Create(*Session) error
 	FindByID(SessionID) (*Session, error)
 	FindByUserID(model.UserID) (*Session, error)
-	Delete(SessionID) error
+	Delete(model.UserID) error
 }
 
 func NewSessionUsecase(r SessionRepository) SessionUsecase {
@@ -44,6 +44,10 @@ const sessionValidDuration = 2 * time.Hour
 var getNow = time.Now
 
 func (u *sessionUsecase) CreateSession(userID model.UserID) (*Session, error) {
+	if err := u.DeleteSession(userID); err != nil {
+		return nil, errors.Wrap(err, "failed to store session")
+	}
+
 	id := model.CreateUUID()
 
 	now := getNow()
@@ -71,7 +75,7 @@ func (u *sessionUsecase) Verify(id SessionID) (*Session, error) {
 	}
 
 	if getNow().After(s.ExpiredAt) {
-		if err := u.DeleteSession(s.ID); err != nil {
+		if err := u.DeleteSession(s.UserID); err != nil {
 			return nil, errors.Wrapf(err, "failed to delete expired session, sessionID: %s", s.ID)
 		}
 
@@ -81,7 +85,7 @@ func (u *sessionUsecase) Verify(id SessionID) (*Session, error) {
 	return s, nil
 }
 
-func (u *sessionUsecase) DeleteSession(id SessionID) error {
+func (u *sessionUsecase) DeleteSession(id model.UserID) error {
 	if err := u.sessionRepository.Delete(id); err != nil {
 		return errors.Wrapf(err, "failed to delete session, sessionID: %s", id)
 	}

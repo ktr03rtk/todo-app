@@ -17,14 +17,25 @@ RUN go mod download \
   && apk --no-cache add make alpine-sdk mysql-client
 
 COPY ./ ./
+COPY ./templates /opt/templates
 RUN CGO_ENABLED=0 go build -o server
+
+CMD ["/bin/sh"]
 
 ##################
 FROM golang:1.17-alpine as debug-stage
 
 WORKDIR /opt/todo
+
+ARG TZ
+RUN apk --no-cache add tzdata && \
+  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
+  echo "${TZ}" > /etc/timezone && \
+  apk del tzdata
+
 RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
-COPY . /opt/todo
+COPY ./ ./
+COPY ./templates /opt/templates
 RUN go build -gcflags "all=-N -l" -o debug_app
 
 EXPOSE 8080 2345
@@ -32,6 +43,18 @@ ENTRYPOINT ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--ac
 
 ##################
 FROM alpine as production-stage
+
+WORKDIR /opt/todo
+
+ARG TZ
+RUN apk --no-cache add tzdata && \
+  cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
+  echo "${TZ}" > /etc/timezone && \
+  apk del tzdata
+
 COPY --from=build-stage /opt/todo/server /usr/bin/server
+COPY ./templates /opt/templates
+
 EXPOSE 8080
+
 ENTRYPOINT ["server"]

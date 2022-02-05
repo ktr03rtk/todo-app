@@ -41,7 +41,7 @@ func (up *SessionPersistence) FindByID(id usecase.SessionID) (*usecase.Session, 
 func (up *SessionPersistence) FindByUserID(id model.UserID) (*usecase.Session, error) {
 	s := &usecase.Session{UserID: id}
 
-	if err := up.conn.Where(&s).First(&s).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := up.conn.Where("user_id = ?", s.UserID).First(&s).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	} else if err != nil {
 		return nil, errors.Wrapf(err, "failed to find session. user id: %+v", id)
@@ -50,11 +50,11 @@ func (up *SessionPersistence) FindByUserID(id model.UserID) (*usecase.Session, e
 	return s, nil
 }
 
-func (up *SessionPersistence) Delete(id usecase.SessionID) error {
-	s := &usecase.Session{ID: id}
+func (up *SessionPersistence) Delete(id model.UserID) error {
+	s := &usecase.Session{UserID: id}
 
-	if err := up.conn.Delete(&s).Error; err != nil {
-		return errors.Wrapf(err, "failed to create session. session id: %+v", id)
+	if err := up.conn.Where("user_id = ?", s.UserID).Delete(&s).Error; err != nil {
+		return errors.Wrapf(err, "failed to delete session. session id: %+v", id)
 	}
 
 	return nil
