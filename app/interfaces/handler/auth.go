@@ -14,21 +14,19 @@ func (h *handler) signUp(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		errorResponse(w, r, err)
 	} else if s != nil {
 		http.Redirect(w, r, "/tasks", http.StatusFound)
+	} else {
+		generateHTML(w, r, nil, "layout", "signup")
 	}
-
-	generateHTML(w, r, nil, "layout", "signup")
 }
 
 func (h *handler) signupUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, r, err)
-	}
-
-	if err := h.userUsecase.SignUp(r.PostFormValue("email"), r.PostFormValue("password")); err != nil {
+	} else if err := h.userUsecase.SignUp(r.PostFormValue("email"), r.PostFormValue("password")); err != nil {
 		errorResponse(w, r, err)
+	} else {
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
-
-	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (h *handler) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -37,24 +35,30 @@ func (h *handler) login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		errorResponse(w, r, err)
 	} else if s != nil {
 		http.Redirect(w, r, "/tasks", http.StatusFound)
+	} else {
+		generateHTML(w, r, nil, "layout", "login")
 	}
-
-	generateHTML(w, r, nil, "layout", "login")
 }
 
 func (h *handler) authenticate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	id, err := h.userUsecase.Authenticate(r.PostFormValue("email"), r.PostFormValue("password"))
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	session, err := h.sessionUsecase.CreateSession(id)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	cookie := &http.Cookie{
@@ -72,12 +76,18 @@ func (h *handler) logout(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	if err := h.sessionUsecase.DeleteSession(s.UserID); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	http.Redirect(w, r, "/login", http.StatusFound)
