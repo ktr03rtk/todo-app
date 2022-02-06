@@ -6,6 +6,7 @@
   <a class="btn btn-secondary" href="/logout" role="button">Logout</a>
 </div>
 
+{{ $userID := .Session.UserID }} {{ with .Task}}
 <div class="card" style="width: 30rem">
   <div class="card-body">
     <h3 class="card-title">
@@ -17,6 +18,9 @@
         {{ if eq .Status 0 }} Working {{ else if eq .Status 1 }} Completed {{
         else }} Behind {{ end }}</span
       >
+      {{ if eq $userID .UserID }}
+      <span class="badge bg-success rounded-pill">Owner</span>
+      {{ end }}
     </h3>
     <p class="card-text">{{ .Detail }}</p>
   </div>
@@ -37,11 +41,11 @@
     </li>
   </ul>
   <div class="card-body">
+    {{ if eq $userID .UserID }}
     <a class="btn btn-primary" href="/tasks/show/{{.ID}}/edit" role="button"
       >Edit Task</a
-    >
+    >{{ end }}
     <a class="btn btn-secondary" href="/tasks" role="button">Back</a>
   </div>
 </div>
-
-{{ end }}
+{{ end }} {{ end }}

@@ -9,10 +9,11 @@ import (
 )
 
 type TaskUsecase interface {
-	Create(name, detail string, deadline time.Time) error
+	Create(session Session, name, detail string, deadline time.Time) error
 	FindByID(id model.TaskID) (*model.Task, error)
+	// FindByUserID(session Session) (*model.Task, error)
 	FindAll() ([]*model.Task, error)
-	Update(id model.TaskID, name, detail string, status model.Status, deadline time.Time) error
+	Update(session Session, id model.TaskID, name, detail string, status model.Status, deadline time.Time) error
 }
 
 type taskUsecase struct {
@@ -23,10 +24,10 @@ func NewTaskUsecase(tr repository.TaskRepository) TaskUsecase {
 	return &taskUsecase{taskRepository: tr}
 }
 
-func (u *taskUsecase) Create(name, detail string, deadline time.Time) error {
+func (u *taskUsecase) Create(s Session, name, detail string, deadline time.Time) error {
 	id := model.CreateUUID()
 
-	t, err := model.NewTask(model.TaskID(id), name, detail, deadline)
+	t, err := model.NewTask(model.TaskID(id), s.UserID, name, detail, deadline)
 	if err != nil {
 		return errors.Wrap(err, "failed to create task")
 	}
@@ -56,10 +57,14 @@ func (u *taskUsecase) FindAll() ([]*model.Task, error) {
 	return tasks, nil
 }
 
-func (u *taskUsecase) Update(id model.TaskID, name, detail string, status model.Status, deadline time.Time) error {
+func (u *taskUsecase) Update(s Session, id model.TaskID, name, detail string, status model.Status, deadline time.Time) error {
 	fetchedTask, err := u.taskRepository.FindByID(id)
 	if err != nil {
 		return errors.Wrapf(err, "failed to find task")
+	}
+
+	if s.UserID != fetchedTask.UserID {
+		return errors.New("session user is not task owner")
 	}
 
 	t, err := model.TaskSet(*fetchedTask, name, detail, status, deadline)

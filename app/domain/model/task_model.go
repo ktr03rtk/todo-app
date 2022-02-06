@@ -8,6 +8,7 @@ import (
 
 type Task struct {
 	ID                TaskID
+	UserID            UserID
 	Name              string
 	Detail            string
 	Status            Status
@@ -34,11 +35,12 @@ const (
 
 var getNow = time.Now
 
-func NewTask(id TaskID, name, detail string, deadline time.Time) (*Task, error) {
+func NewTask(id TaskID, userID UserID, name string, detail string, deadline time.Time) (*Task, error) {
 	dl := time.Date(deadline.Year(), deadline.Month(), deadline.Day(), 0, 0, 0, 0, time.Local)
 
 	t := &Task{
 		ID:                id,
+		UserID:            userID,
 		Name:              name,
 		Detail:            detail,
 		Status:            Working,
@@ -68,7 +70,7 @@ func TaskSpecSatisfied(t Task) error {
 }
 
 func TaskSet(fetchedTask Task, name, detail string, status Status, deadline time.Time) (*Task, error) {
-	t, err := NewTask(fetchedTask.ID, name, detail, deadline)
+	t, err := NewTask(fetchedTask.ID, fetchedTask.UserID, name, detail, deadline)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set task")
 	}

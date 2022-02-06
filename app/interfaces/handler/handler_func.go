@@ -7,6 +7,7 @@ import (
 	"text/template"
 	"time"
 	"todo-app/domain/model"
+	"todo-app/usecase"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,6 +18,12 @@ var funcMap = template.FuncMap{
 	"formatDate": func(t time.Time) string {
 		return t.Format(timeLayout)
 	},
+}
+
+type data struct {
+	Session *usecase.Session
+	Tasks   []*model.Task
+	Task    *model.Task
 }
 
 func (h *handler) home(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -49,7 +56,12 @@ func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	generateHTML(w, r, tasks, "layout", "task_all")
+	d := &data{
+		Session: s,
+		Tasks:   tasks,
+	}
+
+	generateHTML(w, r, d, "layout", "task_all")
 }
 
 func (h *handler) newTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -88,7 +100,7 @@ func (h *handler) createTask(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if err := h.taskUsecase.Create(r.PostFormValue("name"), r.PostFormValue("detail"), deadline); err != nil {
+	if err := h.taskUsecase.Create(*s, r.PostFormValue("name"), r.PostFormValue("detail"), deadline); err != nil {
 		errorResponse(w, r, err)
 
 		return
@@ -118,7 +130,12 @@ func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	generateHTML(w, r, task, "layout", "task_detail")
+	d := &data{
+		Session: s,
+		Task:    task,
+	}
+
+	generateHTML(w, r, d, "layout", "task_detail")
 }
 
 func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -184,7 +201,7 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if err := h.taskUsecase.Update(id, r.PostFormValue("name"), r.PostFormValue("detail"), model.Status(status), deadline); err != nil {
+	if err := h.taskUsecase.Update(*s, id, r.PostFormValue("name"), r.PostFormValue("detail"), model.Status(status), deadline); err != nil {
 		errorResponse(w, r, err)
 
 		return

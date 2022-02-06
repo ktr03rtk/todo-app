@@ -84,7 +84,7 @@ sqldump:
 	mysqldump -h db -u root -ppassword --databases todo > db/dump.sql
 
 drop_table:
-	mysql -h db -u root -ppassword todo -e'DROP TABLE tasks;'
+	mysql -h db -u root -ppassword todo -e'SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS tasks; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS sessions;'
 
 restore_table:
 	mysql -h db -u root -ppassword < db/dump.sql

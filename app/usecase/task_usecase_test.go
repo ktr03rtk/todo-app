@@ -1,25 +1,26 @@
 package usecase
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 	"time"
 	"todo-app/domain/model"
 	"todo-app/mock"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTaskCreateUseCase(t *testing.T) {
+	session := Session{UserID: model.UserID("477ecd7f-48fe-6b1c-499a-ec9f52b15a33")}
+
 	tests := []struct {
 		name              string
 		taskName          string
 		detail            string
 		deadline          time.Time
 		expectedOutput    error
-		expectedErr       string
+		expectedErr       error
 		expectedCallTimes int
 	}{
 		{
@@ -28,7 +29,7 @@ func TestTaskCreateUseCase(t *testing.T) {
 			"Reserve venue for conference",
 			time.Now().AddDate(0, 0, 2),
 			nil,
-			"",
+			nil,
 			1,
 		},
 		{
@@ -36,8 +37,8 @@ func TestTaskCreateUseCase(t *testing.T) {
 			"Venue Reservation",
 			"Reserve venue for conference",
 			time.Now().AddDate(0, 0, 2),
-			fmt.Errorf("fail to store"),
-			"fail to store",
+			errors.New("failed to create"),
+			errors.New("failed to store"),
 			1,
 		},
 	}
@@ -53,10 +54,14 @@ func TestTaskCreateUseCase(t *testing.T) {
 
 			taskRepository.EXPECT().Create(gomock.Any()).Return(tt.expectedOutput).Times(tt.expectedCallTimes)
 
-			if err := usecase.Create(tt.taskName, tt.detail, tt.deadline); err != nil {
-				assert.Contains(t, err.Error(), tt.expectedErr)
+			if err := usecase.Create(session, tt.taskName, tt.detail, tt.deadline); err != nil {
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
+				} else {
+					t.Fatalf("error is not expected but received: %v", err)
+				}
 			} else {
-				assert.Exactly(t, tt.expectedErr, "", "error is expected but received nil")
+				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 			}
 		})
 	}
@@ -159,12 +164,13 @@ func TestTaskFindAllUseCase(t *testing.T) {
 }
 
 func TestTaskUpdateUseCase(t *testing.T) {
+	session := Session{UserID: model.UserID("477ecd7f-48fe-6b1c-499a-ec9f52b15a33")}
 	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
 	dl := time.Now().AddDate(0, 0, 2)
 	deadline := time.Date(dl.Year(), dl.Month(), dl.Day(), 0, 0, 0, 0, time.Local)
 
-	normalTask := &model.Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0}
-	updatedTask := &model.Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0}
+	normalTask := &model.Task{ID: id, UserID: session.UserID, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0}
+	updatedTask := &model.Task{ID: id, UserID: session.UserID, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0}
 
 	updatedTaskName := "Updated Venue Reservation"
 	updatedTaskDetail := "Updated Reserve venue for conference"
@@ -214,8 +220,12 @@ func TestTaskUpdateUseCase(t *testing.T) {
 				taskRepository.EXPECT().Update(updatedTask).Return(tt.expectedUpdateErr).Times(tt.expectedCallTimes),
 			)
 
-			if err := usecase.Update(id, updatedTaskName, updatedTaskDetail, status, deadline); err != nil {
-				assert.Contains(t, err.Error(), tt.expectedErr.Error())
+			if err := usecase.Update(session, id, updatedTaskName, updatedTaskDetail, status, deadline); err != nil {
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
+				} else {
+					t.Fatalf("error is not expected but received: %v", err)
+				}
 			} else {
 				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 			}
@@ -224,12 +234,13 @@ func TestTaskUpdateUseCase(t *testing.T) {
 }
 
 func TestTaskUpdatePostoneUseCase(t *testing.T) {
+	session := Session{UserID: model.UserID("477ecd7f-48fe-6b1c-499a-ec9f52b15a33")}
 	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
 	dl := time.Now().AddDate(0, 0, 2)
 	deadline := time.Date(dl.Year(), dl.Month(), dl.Day(), 0, 0, 0, 0, time.Local)
 	updatedDeadline := deadline.Add(24 * time.Hour)
 
-	updatedTask := &model.Task{ID: id, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: updatedDeadline, NotificationCount: 0, PostponedCount: 1}
+	updatedTask := &model.Task{ID: id, UserID: session.UserID, Name: "Updated Venue Reservation", Detail: "Updated Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: updatedDeadline, NotificationCount: 0, PostponedCount: 1}
 
 	updatedTaskName := "Updated Venue Reservation"
 	updatedTaskDetail := "Updated Reserve venue for conference"
@@ -243,13 +254,13 @@ func TestTaskUpdatePostoneUseCase(t *testing.T) {
 	}{
 		{
 			"normal case",
-			&model.Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0},
+			&model.Task{ID: id, UserID: session.UserID, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0},
 			nil,
 			1,
 		},
 		{
 			"postponed count limit over erro case",
-			&model.Task{ID: id, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 3},
+			&model.Task{ID: id, UserID: session.UserID, Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 3},
 			errors.New("failed to satisfy task spec"),
 			0,
 		},
@@ -269,11 +280,47 @@ func TestTaskUpdatePostoneUseCase(t *testing.T) {
 				taskRepository.EXPECT().Update(updatedTask).Return(nil).Times(tt.expectedCallTimes),
 			)
 
-			if err := usecase.Update(id, updatedTaskName, updatedTaskDetail, status, updatedDeadline); err != nil {
-				assert.Contains(t, err.Error(), tt.expectedErr.Error())
+			if err := usecase.Update(session, id, updatedTaskName, updatedTaskDetail, status, updatedDeadline); err != nil {
+				if tt.expectedErr != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr.Error())
+				} else {
+					t.Fatalf("error is not expected but received: %v", err)
+				}
 			} else {
 				assert.Exactly(t, tt.expectedErr, nil, "error is expected but received nil")
 			}
 		})
+	}
+}
+
+func TestOtherUsersTaskUpdateUseCase(t *testing.T) {
+	session := Session{UserID: model.UserID("477ecd7f-48fe-6b1c-499a-ec9f52b15a33")}
+	id := model.TaskID("19742914-f296-4855-aa8d-f099727e288f")
+	dl := time.Now().AddDate(0, 0, 2)
+	deadline := time.Date(dl.Year(), dl.Month(), dl.Day(), 0, 0, 0, 0, time.Local)
+
+	otherUsersTask := &model.Task{ID: id, UserID: model.UserID("xxxecd7f-48fe-6b1c-499a-ec9f52b15a33"), Name: "Venue Reservation", Detail: "Reserve venue for conference", Status: model.Working, CompletionDate: nil, Deadline: deadline, NotificationCount: 0, PostponedCount: 0}
+
+	updatedTaskName := "Updated Venue Reservation"
+	updatedTaskDetail := "Updated Reserve venue for conference"
+	status := model.Working
+	expectedErr := errors.New("session user is not task owner")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	taskRepository := mock.NewMockTaskRepository(ctrl)
+	usecase := NewTaskUsecase(taskRepository)
+
+	taskRepository.EXPECT().FindByID(id).Return(otherUsersTask, nil).Times(1)
+
+	if err := usecase.Update(session, id, updatedTaskName, updatedTaskDetail, status, deadline); err != nil {
+		if expectedErr != nil {
+			assert.Contains(t, err.Error(), expectedErr.Error())
+		} else {
+			t.Fatalf("error is not expected but received: %v", err)
+		}
+	} else {
+		assert.Exactly(t, expectedErr, nil, "error is expected but received nil")
 	}
 }
