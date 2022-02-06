@@ -25,22 +25,28 @@ func (h *handler) home(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		errorResponse(w, r, err)
 	} else if s != nil {
 		http.Redirect(w, r, "/tasks", http.StatusFound)
+	} else {
+		generateHTML(w, r, nil, "layout", "home")
 	}
-
-	generateHTML(w, r, nil, "layout", "home")
 }
 
 func (h *handler) findAllTask(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	tasks, err := h.taskUsecase.FindAll()
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	generateHTML(w, r, tasks, "layout", "task_all")
@@ -52,30 +58,40 @@ func (h *handler) newTask(w http.ResponseWriter, r *http.Request, _ httprouter.P
 		errorResponse(w, r, err)
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+	} else {
+		generateHTML(w, r, nil, "layout", "task_new")
 	}
-
-	generateHTML(w, r, nil, "layout", "task_new")
 }
 
 func (h *handler) createTask(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	deadline, err := time.Parse(timeLayout, r.PostFormValue("deadline"))
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	if err := h.taskUsecase.Create(r.PostFormValue("name"), r.PostFormValue("detail"), deadline); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	http.Redirect(w, r, "/tasks", http.StatusFound)
@@ -85,8 +101,12 @@ func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	id := model.TaskID(ps.ByName("id"))
@@ -94,6 +114,8 @@ func (h *handler) findTask(w http.ResponseWriter, r *http.Request, ps httprouter
 	task, err := h.taskUsecase.FindByID(id)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	generateHTML(w, r, task, "layout", "task_detail")
@@ -103,8 +125,12 @@ func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	id := model.TaskID(ps.ByName("id"))
@@ -112,6 +138,8 @@ func (h *handler) editTask(w http.ResponseWriter, r *http.Request, ps httprouter
 	task, err := h.taskUsecase.FindByID(id)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	files := []string{"/opt/templates/layout.html", "/opt/templates/task_edit.html"}
@@ -126,12 +154,18 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 	s, err := h.session(r)
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	} else if s == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
+		return
 	}
 
 	if err := r.ParseForm(); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	id := model.TaskID(ps.ByName("id"))
@@ -139,15 +173,21 @@ func (h *handler) updateTask(w http.ResponseWriter, r *http.Request, ps httprout
 	status, err := strconv.Atoi(r.PostFormValue("status"))
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	deadline, err := time.Parse(timeLayout, r.PostFormValue("deadline"))
 	if err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	if err := h.taskUsecase.Update(id, r.PostFormValue("name"), r.PostFormValue("detail"), model.Status(status), deadline); err != nil {
 		errorResponse(w, r, err)
+
+		return
 	}
 
 	url := fmt.Sprint("/tasks/show/", id)

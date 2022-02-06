@@ -4,6 +4,7 @@ TESTARGS=-test.v
 FUNC=
 AWS_REGION=ap-northeast-1
 SEQ=
+VER=
 MYSQL_URL="mysql://root:password@tcp(db:3306)/todo?x-tls-insecure-skip-verify=false"
 TZ?=Asia/Tokyo
 
@@ -16,6 +17,10 @@ build: fmtcheck
 dev-run:
 	COMPOSE_FILE="docker-compose.yml:docker-compose-dev.yml" \
 		TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
+
+debug-run:
+	COMPOSE_FILE="docker-compose.yml:docker-compose-debug.yml" \
+		TARGET=debug-stage ENTRYPOINT="make hot-debug" docker-compose up --build
 
 run: build
 	docker-compose up --build
@@ -43,6 +48,13 @@ endif
 hot:
 	reflex -r '(\.go$$|\.html$$)' -s go run main.go
 
+hot-debug:
+	reflex -r '(\.go$$|\.html$$)' -s make debug
+
+debug:
+	go build -gcflags "all=-N -l" -o debug_app
+	dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec ./debug_app
+
 generate: fmtcheck
 	go generate ./...
 
@@ -57,10 +69,13 @@ create_migration:
 	migrate create -ext sql -dir db/migrations -seq $(SEQ)
 
 migrate_up:
-	migrate -database=$(MYSQL_URL) -path=db/migrations/ up
+	migrate -database=$(MYSQL_URL) -path=db/migrations/ up 1
 
 migrate_down:
-	migrate -database=$(MYSQL_URL) -path=db/migrations/ down
+	migrate -database=$(MYSQL_URL) -path=db/migrations/ down 1
+
+migrate_force:
+	migrate -database=$(MYSQL_URL) -path=db/migrations/ force $(VER)
 
 sql:
 	mysql -h db -u root -ppassword todo
@@ -74,4 +89,4 @@ drop_table:
 restore_table:
 	mysql -h db -u root -ppassword < db/dump.sql
 
-.PHONY: default build dev-run run test_up test_down test hottest generate fmt fmtcheck create_migration migrate_up migrate_down sql sqldump drop_table restore_table
+.PHONY: default build dev-run degub-run run test_up test_down test hottest hot hot-debug debug generate fmt fmtcheck create_migration migrate_up migrate_down migrate_force sql sqldump drop_table restore_table

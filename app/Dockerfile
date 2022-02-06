@@ -33,13 +33,21 @@ RUN apk --no-cache add tzdata && \
   echo "${TZ}" > /etc/timezone && \
   apk del tzdata
 
-RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
+COPY go.mod go.sum ./
+RUN go mod download \
+  && go install github.com/rakyll/gotest@latest \
+  && go install github.com/cespare/reflex@latest \
+  && go install github.com/golang/mock/mockgen@v1.6.0 \
+  && go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest \
+  && apk --no-cache add make alpine-sdk mysql-client \
+  && CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@latest
+
 COPY ./ ./
 COPY ./templates /opt/templates
 RUN go build -gcflags "all=-N -l" -o debug_app
 
 EXPOSE 8080 2345
-ENTRYPOINT ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./debug_app"]
+CMD ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./debug_app"]
 
 ##################
 FROM alpine as production-stage

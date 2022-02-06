@@ -5,6 +5,7 @@ on:
     branches:
       - development
       - feature/*
+      - fix/*
     paths:
       - "app/**"
   pull_request:
