@@ -5,6 +5,7 @@ services:
       target: ${TARGET}
     volumes:
       - ${PWD}/:/opt/todo
+      - ${PWD}/templates/:/opt/templates
     entrypoint: ${ENTRYPOINT}
     ports:
       - 2345:2345
