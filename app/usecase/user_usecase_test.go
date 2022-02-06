@@ -82,7 +82,11 @@ func TestUserSignupUseCase(t *testing.T) {
 			)
 
 			if err := usecase.SignUp(tt.email, tt.password); err != nil {
-				assert.Contains(t, err.Error(), tt.expectedOutput.Error())
+				if tt.expectedOutput != nil {
+					assert.Contains(t, err.Error(), tt.expectedOutput.Error())
+				} else {
+					t.Fatalf("error is not expected but received: %v", err)
+				}
 			} else {
 				assert.Nil(t, tt.expectedOutput, "error is expected but received nil")
 			}
