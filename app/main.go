@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"todo-app/config"
 	"todo-app/domain/service"
 	"todo-app/infrastructure/persistence"
@@ -17,7 +21,17 @@ func main() {
 	userService := service.NewUService(userRepository)
 	userUsecase := usecase.NewUserUsecase(userRepository, userService)
 	sessionUsecase := usecase.NewSessionUsecase(sessionRepository)
+
 	handler := handler.NewHandler(taskUsecase, userUsecase, sessionUsecase)
 
-	handler.Start()
+	go func() {
+		handler.Start()
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM)
+	<-quit
+	log.Println("Caught SIGTERM, shutting down")
+
+	handler.Stop()
 }

@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+	"time"
 	"todo-app/usecase"
 
 	"github.com/julienschmidt/httprouter"
@@ -11,23 +12,46 @@ import (
 
 type Handler interface {
 	Start()
+	Stop()
 }
 
 type handler struct {
 	taskUsecase    usecase.TaskUsecase
 	userUsecase    usecase.UserUsecase
 	sessionUsecase usecase.SessionUsecase
+	server         *http.Server
 }
 
 func NewHandler(tu usecase.TaskUsecase, uu usecase.UserUsecase, su usecase.SessionUsecase) Handler {
-	return &handler{
+	h := &handler{
 		taskUsecase:    tu,
 		userUsecase:    uu,
 		sessionUsecase: su,
 	}
+
+	h.setupServer()
+
+	return h
 }
 
 func (h *handler) Start() {
+	if err := h.server.ListenAndServe(); err != nil {
+		log.Fatalln("Server closed with error:", err)
+	}
+}
+
+func (h *handler) Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := h.server.Shutdown(ctx); err != nil {
+		log.Println("Failed to gracefully shutdown:", err)
+	}
+
+	log.Println("Server shutdown")
+}
+
+func (h *handler) setupServer() {
 	router := httprouter.New()
 
 	// INFO: avoid conflict https://github.com/julienschmidt/httprouter/issues/73
@@ -48,6 +72,8 @@ func (h *handler) Start() {
 
 	router.GET("/err", h.err)
 
-	fmt.Println("server start")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	h.server = &http.Server{
+		Handler: router,
+		Addr:    ":8080",
+	}
 }
