@@ -16,11 +16,13 @@ build: fmtcheck
 
 dev-run:
 	COMPOSE_FILE="docker-compose.yml:docker-compose-dev.yml" \
-		TARGET=build-stage ENTRYPOINT="make hot" docker-compose up --build
+		TARGET=build-stage ENTRYPOINT="/opt/todo/scripts/wait-for-mysql.sh make hot" \
+		docker-compose up --build
 
 debug-run:
 	COMPOSE_FILE="docker-compose.yml:docker-compose-debug.yml" \
-		TARGET=debug-stage ENTRYPOINT="make hot-debug" docker-compose up --build
+		TARGET=debug-stage ENTRYPOINT="/opt/todo/scripts/wait-for-mysql.sh make hot-debug" \
+		docker-compose up --build
 
 run: build
 	docker-compose up --build
