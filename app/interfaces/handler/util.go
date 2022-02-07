@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"text/template"
 
@@ -17,7 +18,7 @@ func (h *handler) err(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 }
 
 func errorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	fmt.Println(err)
+	log.Println(err)
 	url := "/err?msg=" + err.Error()
 	http.Redirect(w, r, url, http.StatusFound)
 }
