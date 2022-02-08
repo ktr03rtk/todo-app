@@ -29,11 +29,13 @@ provider "aws" {
 
 
 locals {
-  vpc_cidr           = "10.0.0.0/16"
-  availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
-  ingress_cidrs      = ["10.0.0.0/24", "10.0.1.0/24"]
-  private_cidrs      = ["10.0.10.0/24", "10.0.11.0/24"]
-  egress_cidrs       = ["10.0.20.0/24", "10.0.21.0/24"]
+  vpc_cidr                 = "10.0.0.0/16"
+  availability_zones       = ["ap-northeast-1a", "ap-northeast-1c"]
+  ingress_cidrs            = ["10.0.0.0/24", "10.0.1.0/24"]
+  private_cidrs            = ["10.0.10.0/24", "10.0.11.0/24"]
+  egress_cidrs             = ["10.0.20.0/24", "10.0.21.0/24"]
+  private_db_cidrs         = ["10.0.30.0/24", "10.0.31.0/24"]
+  private_management_cidrs = ["10.0.40.0/24", "10.0.41.0/24"]
 }
 
 # =========================================
@@ -126,7 +128,7 @@ resource "aws_security_group" "egress" {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
-    security_groups = [aws_security_group.private.id]
+    security_groups = [aws_security_group.private.id, aws_security_group.private_management.id]
   }
 
   egress {
@@ -139,6 +141,50 @@ resource "aws_security_group" "egress" {
 
   tags = {
     Name = "${var.app_name}-sg-egress"
+  }
+}
+
+resource "aws_security_group" "private_db" {
+  name        = "${var.app_name}-sg-private-db"
+  description = "access to db"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "access to db"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.private.id]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "${var.app_name}-sg-private-db"
+  }
+}
+
+resource "aws_security_group" "private_management" {
+  name        = "${var.app_name}-sg-private-management"
+  description = "access to management"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "${var.app_name}-sg-private-management"
   }
 }
 
@@ -184,6 +230,32 @@ resource "aws_subnet" "egress" {
   }
 }
 
+resource "aws_subnet" "private_db" {
+  for_each = { for idx, az in local.availability_zones : idx => az }
+
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = local.private_db[each.key]
+  availability_zone       = each.value
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "${var.app_name}-sbn-private_db"
+  }
+}
+
+resource "aws_subnet" "private_management" {
+  for_each = { for idx, az in local.availability_zones : idx => az }
+
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = local.private_management_cidrs[each.key]
+  availability_zone       = each.value
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "${var.app_name}-sbn-private_management"
+  }
+}
+
 # =========================================
 # Route Table
 # =========================================
@@ -226,6 +298,18 @@ resource "aws_route_table_association" "egress" {
   route_table_id = aws_route_table.private.id
 }
 
+resource "aws_route_table_association" "private_db" {
+  count          = length(local.private_db_cidrs)
+  subnet_id      = aws_subnet.private_db[count.index].id
+  route_table_id = aws_route_table.private_db.id
+}
+
+resource "aws_route_table_association" "private_management" {
+  count          = length(local.private_management_cidrs)
+  subnet_id      = aws_subnet.private_management[count.index].id
+  route_table_id = aws_route_table.private_management.id
+}
+
 # =========================================
 # VPC Endpoint
 # =========================================
@@ -234,6 +318,9 @@ locals {
     "ecr-api" : "com.amazonaws.ap-northeast-1.ecr.api",
     "ecr-dkr" : "com.amazonaws.ap-northeast-1.ecr.dkr",
     "logs" : "com.amazonaws.ap-northeast-1.logs"
+    "ssmmessages" : "com.amazonaws.ap-northeast-1.ssmmessages",
+    "ssm" : "com.amazonaws.ap-northeast-1.ssm"
+    "secretsmanager" : "com.amazonaws.ap-northeast-1.secretsmanager"
   }
 }
 
