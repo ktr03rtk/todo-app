@@ -1,5 +1,7 @@
 FROM python:3.10
 
+WORKDIR /infrastructure
+
 # install command.
 RUN apt-get update && apt-get install -y less vim wget unzip jq nkf sudo
 
@@ -20,4 +22,4 @@ ARG TFLINT_VERSION
 RUN curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
 
 # COPY terraform related files
-COPY . /environments
+COPY . /infrastructure
