@@ -29,13 +29,13 @@ provider "aws" {
 
 
 locals {
-  vpc_cidr                 = "10.0.0.0/16"
-  availability_zones       = ["ap-northeast-1a", "ap-northeast-1c"]
-  ingress_cidrs            = ["10.0.0.0/24", "10.0.1.0/24"]
-  private_cidrs            = ["10.0.10.0/24", "10.0.11.0/24"]
-  egress_cidrs             = ["10.0.20.0/24", "10.0.21.0/24"]
-  private_db_cidrs         = ["10.0.30.0/24", "10.0.31.0/24"]
-  private_management_cidrs = ["10.0.40.0/24", "10.0.41.0/24"]
+  vpc_cidr           = "10.0.0.0/16"
+  availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
+  ingress_cidrs      = ["10.0.0.0/24", "10.0.1.0/24"]
+  private_cidrs      = ["10.0.10.0/24", "10.0.11.0/24"]
+  egress_cidrs       = ["10.0.20.0/24", "10.0.21.0/24"]
+  db_cidrs           = ["10.0.30.0/24", "10.0.31.0/24"]
+  management_cidrs   = ["10.0.40.0/24", "10.0.41.0/24"]
 }
 
 # =========================================
@@ -128,7 +128,7 @@ resource "aws_security_group" "egress" {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
-    security_groups = [aws_security_group.private.id, aws_security_group.private_management.id]
+    security_groups = [aws_security_group.private.id, aws_security_group.management.id]
   }
 
   egress {
@@ -144,8 +144,8 @@ resource "aws_security_group" "egress" {
   }
 }
 
-resource "aws_security_group" "private_db" {
-  name        = "${var.app_name}-sg-private-db"
+resource "aws_security_group" "db" {
+  name        = "${var.app_name}-sg-db"
   description = "access to db"
   vpc_id      = aws_vpc.main.id
 
@@ -154,7 +154,7 @@ resource "aws_security_group" "private_db" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.private.id]
+    security_groups = [aws_security_group.private.id, aws_security_group.management.id]
   }
 
   egress {
@@ -166,12 +166,12 @@ resource "aws_security_group" "private_db" {
   }
 
   tags = {
-    Name = "${var.app_name}-sg-private-db"
+    Name = "${var.app_name}-sg-db"
   }
 }
 
-resource "aws_security_group" "private_management" {
-  name        = "${var.app_name}-sg-private-management"
+resource "aws_security_group" "management" {
+  name        = "${var.app_name}-sg-management"
   description = "access to management"
   vpc_id      = aws_vpc.main.id
 
@@ -184,7 +184,7 @@ resource "aws_security_group" "private_management" {
   }
 
   tags = {
-    Name = "${var.app_name}-sg-private-management"
+    Name = "${var.app_name}-sg-management"
   }
 }
 
@@ -230,29 +230,34 @@ resource "aws_subnet" "egress" {
   }
 }
 
-resource "aws_subnet" "private_db" {
+resource "aws_subnet" "db" {
   for_each = { for idx, az in local.availability_zones : idx => az }
 
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = local.private_db_cidrs[each.key]
+  cidr_block              = local.db_cidrs[each.key]
   availability_zone       = each.value
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.app_name}-sbn-private_db"
+    Name = "${var.app_name}-sbn-db"
   }
 }
 
-resource "aws_subnet" "private_management" {
+resource "aws_db_subnet_group" "db" {
+  name       = "todo-db"
+  subnet_ids = [for subnet in aws_subnet.db : subnet.id]
+}
+
+resource "aws_subnet" "management" {
   for_each = { for idx, az in local.availability_zones : idx => az }
 
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = local.private_management_cidrs[each.key]
+  cidr_block              = local.management_cidrs[each.key]
   availability_zone       = each.value
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.app_name}-sbn-private_management"
+    Name = "${var.app_name}-sbn-management"
   }
 }
 
@@ -298,15 +303,15 @@ resource "aws_route_table_association" "egress" {
   route_table_id = aws_route_table.private.id
 }
 
-resource "aws_route_table_association" "private_db" {
-  count          = length(local.private_db_cidrs)
-  subnet_id      = aws_subnet.private_db[count.index].id
+resource "aws_route_table_association" "db" {
+  count          = length(local.db_cidrs)
+  subnet_id      = aws_subnet.db[count.index].id
   route_table_id = aws_route_table.private.id
 }
 
-resource "aws_route_table_association" "private_management" {
-  count          = length(local.private_management_cidrs)
-  subnet_id      = aws_subnet.private_management[count.index].id
+resource "aws_route_table_association" "management" {
+  count          = length(local.management_cidrs)
+  subnet_id      = aws_subnet.management[count.index].id
   route_table_id = aws_route_table.private.id
 }
 
@@ -817,7 +822,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_low" {
 }
 
 # =========================================
-# IAM
+# IAM for ECS
 # =========================================
 data "aws_iam_policy" "task_execution" {
   name = "AmazonECSTaskExecutionRolePolicy"
@@ -983,4 +988,136 @@ resource "aws_wafv2_web_acl" "application" {
   tags = {
     Name = "${var.app_name}-waf"
   }
+}
+
+# =========================================
+# RDS
+# =========================================
+resource "aws_db_instance" "db" {
+  identifier                      = "todo-db"
+  allocated_storage               = 20
+  auto_minor_version_upgrade      = true
+  backup_retention_period         = 1
+  copy_tags_to_snapshot           = true
+  db_subnet_group_name            = "todo-db"
+  delete_automated_backups        = true
+  deletion_protection             = true
+  enabled_cloudwatch_logs_exports = ["error", "slowquery"]
+  engine                          = "mysql"
+  engine_version                  = "5.7.36"
+  instance_class                  = "db.t3.micro"
+  kms_key_id                      = aws_kms_key.db.arn
+  multi_az                        = true
+  max_allocated_storage           = 100
+  monitoring_interval             = 60
+  monitoring_role_arn             = aws_iam_role.db.arn
+  name                            = var.db_name
+  option_group_name               = aws_db_option_group.db.name
+  parameter_group_name            = aws_db_parameter_group.db.name
+  password                        = var.db_password
+  port                            = 3306
+  skip_final_snapshot             = true
+  storage_encrypted               = true
+  storage_type                    = "gp2"
+  username                        = var.db_username
+  vpc_security_group_ids          = [aws_security_group.db.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
+}
+
+resource "aws_db_option_group" "db" {
+  name                     = "mysql5-7"
+  option_group_description = "mysql5-7 option group"
+  engine_name              = "mysql"
+  major_engine_version     = "5.7"
+}
+
+resource "aws_db_parameter_group" "db" {
+  name        = "mysql5-7"
+  family      = "mysql5.7"
+  description = "mysql5.7 parameter group"
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_client"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_connection"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_database"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_filesystem"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_results"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "character_set_server"
+    value        = "utf8mb4"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "collation_connection"
+    value        = "utf8mb4_unicode_ci"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "collation_server"
+    value        = "utf8mb4_unicode_ci"
+  }
+
+  parameter {
+    apply_method = "immediate"
+    name         = "time_zone"
+    value        = var.time_zone
+  }
+}
+
+resource "aws_iam_role" "db" {
+  name = "todo-rds-monitoring-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "monitoring.rds.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  managed_policy_arns = [data.aws_iam_policy.db.arn]
+}
+
+data "aws_iam_policy" "db" {
+  name = "AmazonRDSEnhancedMonitoringRole"
+}
+
+resource "aws_kms_key" "db" {
+  description             = "KMS for db"
+  deletion_window_in_days = 7
 }
