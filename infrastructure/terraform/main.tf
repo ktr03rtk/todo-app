@@ -1,10 +1,10 @@
 terraform {
-  required_version = "~> 1.1.2"
+  required_version = "~> 1.1.5"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "3.72.0"
+      version = "3.74.1"
     }
   }
 
@@ -234,7 +234,7 @@ resource "aws_subnet" "private_db" {
   for_each = { for idx, az in local.availability_zones : idx => az }
 
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = local.private_db[each.key]
+  cidr_block              = local.private_db_cidrs[each.key]
   availability_zone       = each.value
   map_public_ip_on_launch = false
 
@@ -301,13 +301,13 @@ resource "aws_route_table_association" "egress" {
 resource "aws_route_table_association" "private_db" {
   count          = length(local.private_db_cidrs)
   subnet_id      = aws_subnet.private_db[count.index].id
-  route_table_id = aws_route_table.private_db.id
+  route_table_id = aws_route_table.private.id
 }
 
 resource "aws_route_table_association" "private_management" {
   count          = length(local.private_management_cidrs)
   subnet_id      = aws_subnet.private_management[count.index].id
-  route_table_id = aws_route_table.private_management.id
+  route_table_id = aws_route_table.private.id
 }
 
 # =========================================
