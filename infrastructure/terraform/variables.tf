@@ -7,6 +7,7 @@ variable "db_name" {}
 variable "global_certificate_arn" {}
 variable "host_zone_name" {}
 variable "image_arn" {}
+variable "management_image_arn" {}
 variable "local_certificate_arn" {}
 variable "region" {}
 variable "sub_domain_name" {}

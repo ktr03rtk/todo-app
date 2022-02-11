@@ -3,11 +3,12 @@
     "logDriver": "awslogs",
     "secretOptions": null,
     "options": {
-      "awslogs-group": "/ecs/${container_name}-task",
+      "awslogs-group": "${logs_group}",
       "awslogs-region": "${region}",
       "awslogs-stream-prefix": "ecs"
     }
   },
+  "entryPoint": ["${entry_point}"],
   "portMappings": [
     {
       "hostPort": 8080,
@@ -15,9 +16,9 @@
       "containerPort": 8080
     }
   ],
-  "cpu": 128,
-  "memoryReservation": 256,
+  "cpu": ${cpu},
+  "memoryReservation": ${memory},
   "image": "${image_arn}",
-  "readonlyRootFilesystem": true,
+  "readonlyRootFilesystem": false,
   "name": "${container_name}"
 }

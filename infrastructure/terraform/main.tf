@@ -567,7 +567,7 @@ resource "aws_cloudfront_distribution" "application" {
 }
 
 # =========================================
-# ECS
+# ECS for application
 # =========================================
 locals {
   cluster_name = "${var.app_name}-ecs-cluster"
@@ -596,7 +596,7 @@ resource "aws_ecs_task_definition" "application" {
   cpu                      = 1024
   memory                   = 2048
 
-  # task_role_arn      = ""
+  task_role_arn      = aws_iam_role.task.arn
   execution_role_arn = aws_iam_role.task_execution.arn
 
   container_definitions = format("[%s]", templatefile(
@@ -605,6 +605,10 @@ resource "aws_ecs_task_definition" "application" {
       container_name = local.container_name
       region         = var.region
       image_arn      = var.image_arn
+      logs_group     = aws_cloudwatch_log_group.ecs_task.name
+      cpu            = 128
+      memory         = 256
+      entry_point    = "server"
     }
   ))
 
@@ -635,6 +639,7 @@ resource "aws_ecs_service" "application" {
   scheduling_strategy               = "REPLICA"
   desired_count                     = 2
   health_check_grace_period_seconds = 60
+  enable_execute_command            = true
 
   deployment_controller {
     type = "CODE_DEPLOY"
@@ -663,6 +668,104 @@ resource "aws_ecs_service" "application" {
 
   tags = {
     Name = "${var.app_name}-ecs-service"
+  }
+}
+
+# =========================================
+# ECS for management server
+# =========================================
+locals {
+  management_cluster_name = "${var.app_name}-ecs-management-cluster"
+}
+
+resource "aws_ecs_cluster" "management" {
+  name = local.management_cluster_name
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
+  tags = {
+    Name = "${var.app_name}-ecs-management-cluster"
+  }
+}
+
+locals {
+  management_container_name = "management"
+}
+resource "aws_ecs_task_definition" "management" {
+  family                   = "${var.app_name}-management-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+
+  task_role_arn      = aws_iam_role.task.arn
+  execution_role_arn = aws_iam_role.task_execution.arn
+
+  container_definitions = format("[%s]", templatefile(
+    "${path.module}/container_definitions.json",
+    {
+      container_name = local.management_container_name
+      region         = var.region
+      image_arn      = var.management_image_arn
+      logs_group     = aws_cloudwatch_log_group.ecs_management_task.name
+      cpu            = 128
+      memory         = 1024
+      entry_point    = "top"
+    }
+  ))
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = null
+  }
+
+  tags = {
+    Name = "${var.app_name}-management-task-def-ecs"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "ecs_management_task" {
+  name              = "/ecs/${var.app_name}-management-task"
+  retention_in_days = 30
+
+  tags = {
+    Name = "${var.app_name}-lg-ecs-management"
+  }
+}
+
+resource "aws_ecs_service" "management" {
+  name                   = "${var.app_name}-ecs-management-service"
+  cluster                = aws_ecs_cluster.management.id
+  task_definition        = aws_ecs_task_definition.management.arn
+  launch_type            = "FARGATE"
+  scheduling_strategy    = "REPLICA"
+  desired_count          = 1
+  enable_execute_command = true
+
+  deployment_controller {
+    type = "ECS"
+  }
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
+
+  enable_ecs_managed_tags = true
+
+  network_configuration {
+    subnets          = [for subnet in aws_subnet.management : subnet.id]
+    security_groups  = [aws_security_group.management.id]
+    assign_public_ip = false
+  }
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
+
+  tags = {
+    Name = "${var.app_name}-ecs-management-service"
   }
 }
 
@@ -845,6 +948,43 @@ resource "aws_iam_role" "task_execution" {
   })
 
   managed_policy_arns = [data.aws_iam_policy.task_execution.arn]
+}
+
+resource "aws_iam_role" "task" {
+  name = "${var.app_name}-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  inline_policy {
+    name = "ecs_exec_policy"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:CreateControlChannel"
+          ]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
 }
 
 data "aws_iam_policy" "ecs_code_deploy_policy" {
