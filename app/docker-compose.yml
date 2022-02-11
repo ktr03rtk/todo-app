@@ -10,7 +10,7 @@ services:
       - db
     environment:
       DB_HOST: db:3306
-      DB_USERNAME: mysql
+      DB_USERNAME: mysqluser
       DB_PASSWORD: mypassword
       DB_NAME: todo
     ports:
