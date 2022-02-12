@@ -502,8 +502,31 @@ resource "aws_route53_record" "cloud_front" {
 # =========================================
 # CloudFront
 # =========================================
-data "aws_cloudfront_cache_policy" "managed_caching_disabled" {
-  name = "Managed-CachingDisabled"
+resource "aws_cloudfront_cache_policy" "application" {
+  name        = "${var.app_name}-cache-policy"
+  default_ttl = 0
+  max_ttl     = 1
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "whitelist"
+      cookies {
+        items = ["todo_cookie"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "whitelist"
+      query_strings {
+        items = ["msg"]
+      }
+    }
+    headers_config {
+      header_behavior = "none"
+    }
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip   = true
+  }
 }
 
 resource "aws_cloudfront_distribution" "application" {
@@ -539,10 +562,10 @@ resource "aws_cloudfront_distribution" "application" {
 
   default_cache_behavior {
     target_origin_id       = aws_lb.application.dns_name
-    allowed_methods        = ["GET", "HEAD"]
+    allowed_methods        = ["GET", "HEAD", "DELETE", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id        = data.aws_cloudfront_cache_policy.managed_caching_disabled.id
+    cache_policy_id        = aws_cloudfront_cache_policy.application.id
     compress               = true
     smooth_streaming       = false
     default_ttl            = 0
