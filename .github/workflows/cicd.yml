@@ -3,14 +3,14 @@ name: cicd test, build and deploy
 on:
   push:
     branches:
-      - development
+      - develop
       - feature/*
       - fix/*
     paths:
       - "app/**"
   pull_request:
     branches:
-      - development
+      - develop
     paths:
       - "app/**"
 

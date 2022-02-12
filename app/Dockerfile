@@ -1,3 +1,6 @@
+# =========================================
+# build stage
+# =========================================
 FROM golang:1.17-alpine as build-stage
 
 WORKDIR /opt/todo
@@ -22,7 +25,9 @@ RUN CGO_ENABLED=0 go build -o server
 
 CMD ["/bin/sh"]
 
-##################
+# =========================================
+# debug stage
+# =========================================
 FROM golang:1.17-alpine as debug-stage
 
 WORKDIR /opt/todo
@@ -49,7 +54,9 @@ RUN go build -gcflags "all=-N -l" -o debug_app
 EXPOSE 8080 2345
 CMD ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./debug_app"]
 
-##################
+# =========================================
+# production stage
+# =========================================
 FROM alpine as production-stage
 
 WORKDIR /opt/todo
