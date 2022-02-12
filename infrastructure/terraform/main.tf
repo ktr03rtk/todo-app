@@ -595,6 +595,7 @@ resource "aws_ecs_task_definition" "application" {
   network_mode             = "awsvpc"
   cpu                      = 1024
   memory                   = 2048
+  skip_destroy             = true
 
   task_role_arn      = aws_iam_role.task.arn
   execution_role_arn = aws_iam_role.task_execution.arn
@@ -609,6 +610,10 @@ resource "aws_ecs_task_definition" "application" {
       cpu            = 128
       memory         = 256
       entry_point    = "server"
+      db_host        = aws_db_instance.db.address
+      db_username    = var.db_username
+      db_password    = var.db_password
+      db_name        = var.db_name
     }
   ))
 
@@ -700,6 +705,7 @@ resource "aws_ecs_task_definition" "management" {
   network_mode             = "awsvpc"
   cpu                      = 1024
   memory                   = 2048
+  skip_destroy             = true
 
   task_role_arn      = aws_iam_role.task.arn
   execution_role_arn = aws_iam_role.task_execution.arn
@@ -714,6 +720,10 @@ resource "aws_ecs_task_definition" "management" {
       cpu            = 128
       memory         = 1024
       entry_point    = "top"
+      db_host        = aws_db_instance.db.address
+      db_username    = var.db_username
+      db_password    = var.db_password
+      db_name        = var.db_name
     }
   ))
 
