@@ -40,6 +40,10 @@
     {
       "name": "DB_NAME",
       "value": "${db_name}"
+    },
+    {
+      "name": "ENVIRONMENT",
+      "value": "PRODUCTION"
     }
   ]
 }

@@ -83,16 +83,21 @@ migrate_down:
 migrate_force:
 	migrate -database=$(MYSQL_URL) -path=db/migrations/ force $(VER)
 
-sql:
-	mysql -h db -u $(DB_USERNAME) -p$(DB_PASSWORD) $(DB_NAME)
+sql: set_db_host
+	mysql -h $(DB_HOST) -u $(DB_USERNAME) -p$(DB_PASSWORD) $(DB_NAME)
 
-sqldump:
-	mysqldump -h db -u $(DB_USERNAME) -p$(DB_PASSWORD) --databases $(DB_NAME) > db/dump.sql
+sqldump: set_db_host
+	mysqldump -h $(DB_HOST) -u $(DB_USERNAME) -p$(DB_PASSWORD) --databases $(DB_NAME) > db/dump.sql
 
-drop_table:
-	mysql -h db -u $(DB_USERNAME) -p$(DB_PASSWORD) $(DB_NAME) -e'SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS tasks; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS sessions;'
+drop_table: set_db_host
+	mysql -h $(DB_HOST) -u $(DB_USERNAME) -p$(DB_PASSWORD) $(DB_NAME) -e'SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS tasks; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS sessions;'
 
-restore_table:
-	mysql -h db -u $(DB_USERNAME) -p$(DB_PASSWORD) < db/dump.sql
+restore_table: set_db_host
+	mysql -h $(DB_HOST) -u $(DB_USERNAME) -p$(DB_PASSWORD) < db/dump.sql
 
-.PHONY: default build dev-run degub-run run test_up test_down test hottest hot hot-debug debug generate fmt fmtcheck create_migration migrate_up migrate_down migrate_force sql sqldump drop_table restore_table
+set_db_host:
+ifneq ($(ENVIRONMENT),PRODUCTION)
+	$(eval DB_HOST := "db")
+endif
+
+.PHONY: default build dev-run degub-run run test_up test_down test hottest hot hot-debug debug generate fmt fmtcheck create_migration migrate_up migrate_down migrate_force sql sqldump drop_table restore_table set_db_host
