@@ -8,7 +8,9 @@
       "awslogs-stream-prefix": "ecs"
     }
   },
-  "entryPoint": ["${entry_point}"],
+  "entryPoint": [
+    "${entry_point}"
+  ],
   "portMappings": [
     {
       "hostPort": 8080,
@@ -17,8 +19,27 @@
     }
   ],
   "cpu": ${cpu},
-  "memoryReservation": ${memory},
+  "memoryReservation": ${memory
+  },
   "image": "${image_arn}",
   "readonlyRootFilesystem": false,
-  "name": "${container_name}"
+  "name": "${container_name}",
+  "environment": [
+    {
+      "name": "DB_HOST",
+      "value": "${db_host}"
+    },
+    {
+      "name": "DB_USERNAME",
+      "value": "${db_username}"
+    },
+    {
+      "name": "DB_PASSWORD",
+      "value": "${db_password}"
+    },
+    {
+      "name": "DB_NAME",
+      "value": "${db_name}"
+    }
+  ]
 }
