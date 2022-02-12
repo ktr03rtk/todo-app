@@ -19,6 +19,7 @@ env:
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ECR_MANAGEMENT_REPOSITORY: ${{ secrets.ECR_MANAGEMENT_REPOSITORY }}
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
   ECS_CLUSTER: todo-app-ecs-cluster
   ECS_SERVICE: todo-app-ecs-service
@@ -85,13 +86,15 @@ jobs:
             TZ=${{ env.TZ }}
           load: true
           target: build-stage
-          tags: build-server:${{ github.sha }}
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_MANAGEMENT_REPOSITORY }}:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Test
         # "go test" includes "go vet"", which need C libraries. Alpine container exec this step.
-        run: docker run --rm build-server:${{ github.sha }} sh -c "gotest -v -vet=off ./..."
+        run: |
+          docker run --rm ${{ env.ECR_REGISTRY }}/${{ env.ECR_MANAGEMENT_REPOSITORY }}:${{ github.sha }} sh -c "gotest -v -vet=off ./..."
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_MANAGEMENT_REPOSITORY }}:${{ github.sha }}
 
       - name: Build image
         id: build-image
