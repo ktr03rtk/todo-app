@@ -1,6 +1,6 @@
 FROM python:3.10
 
-WORKDIR /infrastructure
+WORKDIR /infrastructure/terraform
 
 # install command.
 RUN apt-get update && apt-get install -y less vim wget unzip jq nkf sudo

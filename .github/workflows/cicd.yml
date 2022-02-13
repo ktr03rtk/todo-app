@@ -15,11 +15,11 @@ on:
       - "app/**"
 
 env:
-  SLACK_CHANNEL: github-notification
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
   ECR_MANAGEMENT_REPOSITORY: ${{ secrets.ECR_MANAGEMENT_REPOSITORY }}
+  SLACK_CHANNEL: github-notification
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
   ECS_CLUSTER: todo-app-ecs-cluster
   ECS_SERVICE: todo-app-ecs-service

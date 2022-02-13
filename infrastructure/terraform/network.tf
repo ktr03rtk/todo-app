@@ -301,7 +301,6 @@ locals {
     "logs" : "com.amazonaws.ap-northeast-1.logs"
     "ssmmessages" : "com.amazonaws.ap-northeast-1.ssmmessages",
     "ssm" : "com.amazonaws.ap-northeast-1.ssm"
-    "secretsmanager" : "com.amazonaws.ap-northeast-1.secretsmanager"
   }
 }
 
