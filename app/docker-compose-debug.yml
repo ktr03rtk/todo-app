@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  app:
+    build:
+      target: ${TARGET}
+    volumes:
+      - ${PWD}/:/opt/todo
+      - ${PWD}/templates/:/opt/templates
+    entrypoint: ${ENTRYPOINT}
+    ports:
+      - 2345:2345

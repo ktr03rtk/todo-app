@@ -1,0 +1,44 @@
+{{ define "content" }}
+
+<h1>Task new</h1>
+
+<div class="col-auto btn-sm">
+  <a class="btn btn-secondary" href="/logout" role="button">Logout</a>
+</div>
+
+<div style="width: 30rem">
+  <form action="/tasks" method="post">
+    <div class="mb-3">
+      <label for="name" class="form-label">Task name</label>
+      <input type="text" class="form-control" id="name" name="name" required />
+    </div>
+
+    <div class="mb-3">
+      <label for="detail" class="form-label">Task detail</label>
+      <textarea
+        class="form-control"
+        id="detail"
+        name="detail"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="deadline" class="form-label">Deadline</label>
+      <input
+        type="date"
+        class="form-control"
+        id="deadline"
+        name="deadline"
+        required
+      />
+    </div>
+
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Create task</button>
+      <a class="btn btn-secondary" href="/tasks" role="button">Back</a>
+    </div>
+  </form>
+</div>
+
+{{ end }}

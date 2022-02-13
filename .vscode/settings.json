@@ -1,0 +1,14 @@
+{
+  "cSpell.words": [
+    "golangci",
+    "gomock",
+    "gorm",
+    "goserver",
+    "hashicorp",
+    "hostnames",
+    "stretchr",
+    "tfstate",
+    "Wrapf"
+  ],
+  "cSpell.ignorePaths": [".golangci.yml"]
+}

@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  app:
+    container_name: server
+    build:
+      context: .
+      args:
+        TZ: Asia/Tokyo
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db:3306
+      DB_USERNAME: mysqluser
+      DB_PASSWORD: mypassword
+      DB_NAME: todo
+    ports:
+      - 8080:8080
+    restart: always
+
+  db:
+    container_name: db
+    image: mysql:5.7
+    volumes:
+      - ./db/mysql_data:/var/lib/mysql
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: mypassword
+      MYSQL_DATABASE: todo
+      MYSQL_ROOT_PASSWORD: password
+      TZ: Asia/Tokyo
+    ports:
+      - 3306:3306

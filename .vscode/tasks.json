@@ -1,0 +1,94 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "docker build go",
+      "isBackground": true,
+      "command": "docker",
+      "args": [
+        "build",
+        "--target",
+        "debug-stage",
+        "-t",
+        "server:debug",
+        "${fileWorkspaceFolder}/app"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "echo": true,
+        "focus": false,
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    {
+      "type": "shell",
+      "label": "docker run go",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-it",
+        "--name",
+        "server",
+        "-p",
+        "8080:8080",
+        "-p",
+        "2345:2345",
+        "server:debug"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "dependsOn": ["docker build go"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "echo": true,
+        "focus": false,
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": [
+            { "regexp": "__", "file": 1, "location": 2, "message": 3 }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "listening",
+            "endsPattern": "listening"
+          }
+        }
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "docker stop",
+      "isBackground": true,
+      "command": "docker",
+      "args": ["stop", "server"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "echo": true,
+        "focus": false,
+        "showReuseMessage": true,
+        "clear": false
+      }
+    }
+  ]
+}
