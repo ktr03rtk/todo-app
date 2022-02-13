@@ -27,7 +27,7 @@ First, set Github Actions Secrets.Second, push commit and trigger workflow.Then 
 - SLACK_CHANNEL
 - SLACK_WEBHOOK
 
-## Github CICD
+## AWS terraform
 
 First, Set terraform `infrastructure/terraform/terraform.tfvars` file.Then start `terraform apply`.
 
@@ -52,6 +52,6 @@ db_name                 = "todo"
 
 Check your ECS management task ID and start ECS Exec with command `aws ecs execute-command --cluster todo-app-ecs-management-cluster --task {your_task_ID} --container management --interactive --command "sh"`.Next, repeat to execute `make migrate_up` for numbers of migration files.Then, you can access to your app via subdomain.
 
-## CICD
+## Application update
 
 Push the commit of application change, CICD workflow build new image and push it to ECR, and update ECS task and service.You don't need to execute `terraform apply`.
