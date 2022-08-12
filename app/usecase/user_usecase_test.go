@@ -39,7 +39,7 @@ func TestUserSignupUseCase(t *testing.T) {
 			"abc@example.com",
 			"password123",
 			nil,
-			errors.New("fail find by email"),
+			errors.New("failed to find by email"),
 			nil,
 			errors.New("failed to find user"),
 			0,
