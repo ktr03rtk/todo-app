@@ -57,7 +57,7 @@ CMD ["dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-mu
 # =========================================
 # production stage
 # =========================================
-FROM alpine as production-stage
+FROM alpine:3.18.3 as production-stage
 
 WORKDIR /opt/todo
 
