@@ -1,4 +1,4 @@
-FROM python:3.11.0b1-slim-bullseye
+FROM python:3.13.0a4-slim-bullseye
 
 WORKDIR /infrastructure/terraform
 
